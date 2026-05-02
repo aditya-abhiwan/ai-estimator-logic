@@ -316,6 +316,7 @@ def estimate_from_quantities(
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_cost: float = 0,
     taxes: float = 0,
+    roof_area_sqft: float | None = None,
 ) -> EstimateResult:
     """AI Estimator Logic Specification formula using explicit component quantities."""
     components = _component_lookup(load_component_prices(prices_path), roof_type)
@@ -328,6 +329,14 @@ def estimate_from_quantities(
         pricing_mode,
         price_level,
     )
+    # Auto-calculate labor from Excel if roof_area_sqft given and labor_cost not manually set
+    if labor_cost == 0 and roof_area_sqft is not None:
+        labor_component = next(
+            (c for c in components.values() if is_labor_component(c)), None
+        )
+        if labor_component is not None:
+            labor_rate = select_unit_price(labor_component, pricing_mode, price_level) / 100
+            labor_cost = labor_rate * roof_area_sqft
     totals = calculate_final_price(material_cost, labor_cost, taxes, margin)
     return EstimateResult(
         roof_type=roof_type,
@@ -353,6 +362,7 @@ def estimate_retail_range_from_quantities(
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_cost: float = 0,
     taxes: float = 0,
+    roof_area_sqft: float | None = None,
 ) -> EstimateRangeResult:
     """Retail range using workbook lower and upper prices."""
     lower = estimate_from_quantities(
@@ -364,6 +374,7 @@ def estimate_retail_range_from_quantities(
         prices_path=prices_path,
         labor_cost=labor_cost,
         taxes=taxes,
+        roof_area_sqft=roof_area_sqft,
     )
     upper = estimate_from_quantities(
         roof_type=roof_type,
@@ -374,6 +385,7 @@ def estimate_retail_range_from_quantities(
         prices_path=prices_path,
         labor_cost=labor_cost,
         taxes=taxes,
+        roof_area_sqft=roof_area_sqft,
     )
     return EstimateRangeResult(lower=lower, upper=upper)
 
@@ -610,10 +622,7 @@ def parse_unit_coverage_sqft(unit: str) -> float | None:
 
 def is_labor_component(component: ComponentPrice) -> bool:
     material = component.material.strip().lower()
-    unit = component.unit.strip().lower()
-    return material in {"labor", "labour"} or (
-        material in {"labor ", "labour "} and "per square" in unit
-    )
+    return material in {"labor", "labour"}
 
 
 def print_estimate(result: EstimateResult) -> None:
@@ -738,15 +747,12 @@ def _row_dict(headers: list[str], row: list[Any]) -> dict[str, Any]:
 def _extract_price_range(values: dict[str, Any]) -> PriceRange | None:
     lower = _parse_price(values.get("price_per_unit_lower"))
     upper = _parse_price(values.get("price_per_unit_upper"))
-    single = _parse_price(values.get("price_per_unit"))
     text_range = _parse_price_range_text(values.get("price_per_unit"))
 
     if lower is not None and upper is not None:
         return PriceRange(lower=lower, upper=upper)
     if text_range is not None:
         return text_range
-    if single is not None:
-        return PriceRange(lower=single, upper=single)
     if lower is not None:
         return PriceRange(lower=lower, upper=lower)
     if upper is not None:
@@ -783,7 +789,7 @@ def _parse_price_range_text(value: Any) -> PriceRange | None:
 def _parse_percent(value: Any) -> float | None:
     if isinstance(value, (int, float)):
         number = float(value)
-        return number / 100 if number > 1 else number
+        return number / 100 if number >= 1 else number
     if value is None or str(value).strip() == "":
         return None
     text = str(value).strip().lower()
