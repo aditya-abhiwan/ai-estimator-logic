@@ -78,7 +78,7 @@ class EstimateResult:
     material_cost: float
     labor_cost: float
     base_cost: float
-    taxes: float
+    tax_amount: float
     complexity_multiplier: float
     final_price: float
     line_items: list[EstimateLine]
@@ -267,21 +267,24 @@ def calculate_labor_cost(
 def calculate_final_price(
     material_cost: float,
     labor_cost: float = 0,
-    taxes: float = 0,
+    tax_rate: float = 0,
     margin: float = FIXED_MARGIN,
 ) -> dict[str, float]:
-    """Step 7: apply the fixed margin once, then add taxes."""
+    """Step 7: apply the fixed margin once, then apply tax rate."""
     _validate_non_negative(material_cost, "material_cost")
     _validate_non_negative(labor_cost, "labor_cost")
-    _validate_non_negative(taxes, "taxes")
+    _validate_non_negative(tax_rate, "tax_rate")
     if margin != FIXED_MARGIN:
         raise ValueError("Margin is locked at 33% and cannot be changed.")
     base_cost = material_cost + labor_cost
+    after_margin = base_cost * (1 + FIXED_MARGIN)
+    tax_amount = after_margin * tax_rate
     return {
         "material_cost": material_cost,
         "labor_cost": labor_cost,
         "base_cost": base_cost,
-        "final_price": base_cost * (1 + FIXED_MARGIN) + taxes,
+        "tax_amount": tax_amount,
+        "final_price": after_margin + tax_amount,
     }
 
 
@@ -315,7 +318,7 @@ def estimate_from_quantities(
     margin: float = FIXED_MARGIN,
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_cost: float = 0,
-    taxes: float = 0,
+    tax_rate: float = 0,
     roof_area_sqft: float | None = None,
 ) -> EstimateResult:
     """AI Estimator Logic Specification formula using explicit component quantities."""
@@ -337,7 +340,7 @@ def estimate_from_quantities(
         if labor_component is not None:
             labor_rate = select_unit_price(labor_component, pricing_mode, price_level) / 100
             labor_cost = labor_rate * roof_area_sqft
-    totals = calculate_final_price(material_cost, labor_cost, taxes, margin)
+    totals = calculate_final_price(material_cost, labor_cost, tax_rate, margin)
     return EstimateResult(
         roof_type=roof_type,
         pricing_mode=pricing_mode,
@@ -348,7 +351,7 @@ def estimate_from_quantities(
         material_cost=totals["material_cost"],
         labor_cost=totals["labor_cost"],
         base_cost=totals["base_cost"],
-        taxes=taxes,
+        tax_amount=totals["tax_amount"],
         complexity_multiplier=1,
         final_price=totals["final_price"],
         line_items=lines,
@@ -361,7 +364,7 @@ def estimate_retail_range_from_quantities(
     margin: float = FIXED_MARGIN,
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_cost: float = 0,
-    taxes: float = 0,
+    tax_rate: float = 0,
     roof_area_sqft: float | None = None,
 ) -> EstimateRangeResult:
     """Retail range using workbook lower and upper prices."""
@@ -373,7 +376,7 @@ def estimate_retail_range_from_quantities(
         margin=margin,
         prices_path=prices_path,
         labor_cost=labor_cost,
-        taxes=taxes,
+        tax_rate=tax_rate,
         roof_area_sqft=roof_area_sqft,
     )
     upper = estimate_from_quantities(
@@ -384,7 +387,7 @@ def estimate_retail_range_from_quantities(
         margin=margin,
         prices_path=prices_path,
         labor_cost=labor_cost,
-        taxes=taxes,
+        tax_rate=tax_rate,
         roof_area_sqft=roof_area_sqft,
     )
     return EstimateRangeResult(lower=lower, upper=upper)
@@ -402,7 +405,7 @@ def estimate_from_roof_area(
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_rate: float = 0,
     facet_count: int = 1,
-    taxes: float = 0,
+    tax_rate: float = 0,
     complexity_alpha: float = 0.02,
 ) -> EstimateResult:
     roof_area = calculate_roof_area(plan_area_sqft, pitch)
@@ -436,7 +439,7 @@ def estimate_from_roof_area(
             price_level,
         ) / 100
     labor_cost = calculate_labor_cost(effective_labor_rate, roof_area, complexity)
-    totals = calculate_final_price(material_cost, labor_cost, taxes, margin)
+    totals = calculate_final_price(material_cost, labor_cost, tax_rate, margin)
     return EstimateResult(
         roof_type=roof_type,
         pricing_mode=pricing_mode,
@@ -447,7 +450,7 @@ def estimate_from_roof_area(
         material_cost=totals["material_cost"],
         labor_cost=totals["labor_cost"],
         base_cost=totals["base_cost"],
-        taxes=taxes,
+        tax_amount=totals["tax_amount"],
         complexity_multiplier=complexity,
         final_price=totals["final_price"],
         line_items=lines,
@@ -464,7 +467,7 @@ def estimate_retail_range_from_roof_area(
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_rate: float = 0,
     facet_count: int = 1,
-    taxes: float = 0,
+    tax_rate: float = 0,
     complexity_alpha: float = 0.02,
 ) -> EstimateRangeResult:
     """Retail estimate range using lower and upper workbook prices."""
@@ -479,7 +482,7 @@ def estimate_retail_range_from_roof_area(
         "prices_path": prices_path,
         "labor_rate": labor_rate,
         "facet_count": facet_count,
-        "taxes": taxes,
+        "tax_rate": tax_rate,
         "complexity_alpha": complexity_alpha,
     }
     lower = estimate_from_roof_area(price_level="low", **common_args)

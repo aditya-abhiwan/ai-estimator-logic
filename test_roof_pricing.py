@@ -19,11 +19,13 @@ class RoofPricingModelTests(unittest.TestCase):
         totals = pricing.calculate_final_price(
             material_cost=1000,
             labor_cost=200,
-            taxes=50,
+            tax_rate=0.05,  # 5% tax rate
         )
 
         self.assertEqual(totals["base_cost"], 1200)
-        self.assertEqual(totals["final_price"], 1200 * 1.33 + 50)
+        expected_tax_amount = 1200 * 1.33 * 0.05
+        self.assertEqual(totals["tax_amount"], expected_tax_amount)
+        self.assertEqual(totals["final_price"], 1200 * 1.33 + expected_tax_amount)
 
     def test_margin_cannot_be_changed(self):
         with self.assertRaisesRegex(ValueError, "Margin is locked"):

@@ -147,11 +147,11 @@ def main() -> None:
             value=2.0,
             step=0.25,
         )
-        taxes = st.number_input(
-            "Taxes / permits ($)",
+        tax_percent = st.number_input(
+            "Tax rate (%)",
             min_value=0.0,
             value=0.0,
-            step=25.0,
+            step=0.5,
         )
 
     components = prices_by_roof[roof_type]
@@ -199,7 +199,7 @@ def main() -> None:
             "quantity_overrides": quantity_overrides,
             "labor_rate": labor_rate,
             "facet_count": int(facet_count),
-            "taxes": taxes,
+            "tax_rate": tax_percent / 100,
             "complexity_alpha": complexity_alpha_percent / 100,
         }
         if pricing_mode == "retail":
@@ -244,7 +244,7 @@ def main() -> None:
     detail_metrics[0].metric("Roof Area", f"{detail_source.roof_area_sqft:,.2f} sq ft")
     detail_metrics[1].metric("Slope Factor", f"{detail_source.slope_factor:.4f}")
     detail_metrics[2].metric("Complexity", f"{detail_source.complexity_multiplier:.4f}")
-    detail_metrics[3].metric("Taxes / Permits", money(detail_source.taxes))
+    detail_metrics[3].metric("Tax Amount", money(detail_source.tax_amount))
 
     st.subheader("Line Items")
     if isinstance(result, pricing.EstimateRangeResult):
@@ -258,10 +258,10 @@ def main() -> None:
             (
                 "Lower: "
                 f"({money(result.lower.material_cost)} + {money(result.lower.labor_cost)}) "
-                f"* 1.33 + {money(result.lower.taxes)} = {money(result.lower.final_price)}\n"
+                f"* 1.33 * (1 + {tax_percent/100:.2%}) = {money(result.lower.final_price)}\n"
                 "Upper: "
                 f"({money(result.upper.material_cost)} + {money(result.upper.labor_cost)}) "
-                f"* 1.33 + {money(result.upper.taxes)} = {money(result.upper.final_price)}"
+                f"* 1.33 * (1 + {tax_percent/100:.2%}) = {money(result.upper.final_price)}"
             ),
             language="text",
         )
@@ -269,7 +269,7 @@ def main() -> None:
         st.code(
             (
                 f"({money(result.material_cost)} + {money(result.labor_cost)}) "
-                f"* 1.33 + {money(result.taxes)} = {money(result.final_price)}"
+                f"* 1.33 * (1 + {tax_percent/100:.2%}) = {money(result.final_price)}"
             ),
             language="text",
         )
