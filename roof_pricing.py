@@ -79,6 +79,8 @@ class EstimateResult:
     labor_cost: float
     base_cost: float
     tax_amount: float
+    tax_rate: float
+    is_residential_property: bool
     complexity_multiplier: float
     final_price: float
     line_items: list[EstimateLine]
@@ -98,7 +100,9 @@ class EstimateResult:
             "material_cost": self.material_cost,
             "labor_cost": self.labor_cost,
             "base_cost": self.base_cost,
-            "taxes": self.taxes,
+            "tax_amount": self.tax_amount,
+            "tax_rate": self.tax_rate,
+            "is_residential_property": self.is_residential_property,
             "complexity_multiplier": self.complexity_multiplier,
             "final_price": self.final_price,
             "line_items": [
@@ -269,8 +273,9 @@ def calculate_final_price(
     labor_cost: float = 0,
     tax_rate: float = 0,
     margin: float = FIXED_MARGIN,
+    is_residential_property: bool = True,
 ) -> dict[str, float]:
-    """Step 7: apply the fixed margin once, then apply tax rate."""
+    """Step 7: apply the fixed margin once, then residential tax rate."""
     _validate_non_negative(material_cost, "material_cost")
     _validate_non_negative(labor_cost, "labor_cost")
     _validate_non_negative(tax_rate, "tax_rate")
@@ -278,12 +283,15 @@ def calculate_final_price(
         raise ValueError("Margin is locked at 33% and cannot be changed.")
     base_cost = material_cost + labor_cost
     after_margin = base_cost * (1 + FIXED_MARGIN)
-    tax_amount = after_margin * tax_rate
+    effective_tax_rate = tax_rate if is_residential_property else 0
+    tax_amount = after_margin * effective_tax_rate
     return {
         "material_cost": material_cost,
         "labor_cost": labor_cost,
         "base_cost": base_cost,
+        "tax_rate": effective_tax_rate,
         "tax_amount": tax_amount,
+        "is_residential_property": is_residential_property,
         "final_price": after_margin + tax_amount,
     }
 
@@ -295,10 +303,11 @@ def full_framework_price(
     facet_count: int = 1,
     overhead: float = 0,
     margin: float = FIXED_MARGIN,
-    taxes_and_permits: float = 0,
+    tax_rate: float = 0,
+    is_residential_property: bool = True,
     complexity_alpha: float = 0.02,
 ) -> dict[str, float]:
-    """Single pricing formula: (material_cost + labor_cost) * 1.33 + taxes."""
+    """Single pricing formula with residential-only percentage tax."""
     if overhead != 0:
         raise ValueError("Overhead multipliers are not allowed in pricing.")
     complexity = complexity_multiplier(facet_count, complexity_alpha)
@@ -307,7 +316,13 @@ def full_framework_price(
         roof_area_sqft,
         complexity,
     )
-    return calculate_final_price(material_cost, labor_cost, taxes_and_permits, margin)
+    return calculate_final_price(
+        material_cost,
+        labor_cost,
+        tax_rate,
+        margin,
+        is_residential_property,
+    )
 
 
 def estimate_from_quantities(
@@ -320,6 +335,7 @@ def estimate_from_quantities(
     labor_cost: float = 0,
     tax_rate: float = 0,
     roof_area_sqft: float | None = None,
+    is_residential_property: bool = True,
 ) -> EstimateResult:
     """AI Estimator Logic Specification formula using explicit component quantities."""
     components = _component_lookup(load_component_prices(prices_path), roof_type)
@@ -340,7 +356,13 @@ def estimate_from_quantities(
         if labor_component is not None:
             labor_rate = select_unit_price(labor_component, pricing_mode, price_level) / 100
             labor_cost = labor_rate * roof_area_sqft
-    totals = calculate_final_price(material_cost, labor_cost, tax_rate, margin)
+    totals = calculate_final_price(
+        material_cost,
+        labor_cost,
+        tax_rate,
+        margin,
+        is_residential_property,
+    )
     return EstimateResult(
         roof_type=roof_type,
         pricing_mode=pricing_mode,
@@ -352,6 +374,8 @@ def estimate_from_quantities(
         labor_cost=totals["labor_cost"],
         base_cost=totals["base_cost"],
         tax_amount=totals["tax_amount"],
+        tax_rate=totals["tax_rate"],
+        is_residential_property=totals["is_residential_property"],
         complexity_multiplier=1,
         final_price=totals["final_price"],
         line_items=lines,
@@ -366,6 +390,7 @@ def estimate_retail_range_from_quantities(
     labor_cost: float = 0,
     tax_rate: float = 0,
     roof_area_sqft: float | None = None,
+    is_residential_property: bool = True,
 ) -> EstimateRangeResult:
     """Retail range using workbook lower and upper prices."""
     lower = estimate_from_quantities(
@@ -378,6 +403,7 @@ def estimate_retail_range_from_quantities(
         labor_cost=labor_cost,
         tax_rate=tax_rate,
         roof_area_sqft=roof_area_sqft,
+        is_residential_property=is_residential_property,
     )
     upper = estimate_from_quantities(
         roof_type=roof_type,
@@ -389,6 +415,7 @@ def estimate_retail_range_from_quantities(
         labor_cost=labor_cost,
         tax_rate=tax_rate,
         roof_area_sqft=roof_area_sqft,
+        is_residential_property=is_residential_property,
     )
     return EstimateRangeResult(lower=lower, upper=upper)
 
@@ -406,6 +433,7 @@ def estimate_from_roof_area(
     labor_rate: float = 0,
     facet_count: int = 1,
     tax_rate: float = 0,
+    is_residential_property: bool = True,
     complexity_alpha: float = 0.02,
 ) -> EstimateResult:
     roof_area = calculate_roof_area(plan_area_sqft, pitch)
@@ -439,7 +467,13 @@ def estimate_from_roof_area(
             price_level,
         ) / 100
     labor_cost = calculate_labor_cost(effective_labor_rate, roof_area, complexity)
-    totals = calculate_final_price(material_cost, labor_cost, tax_rate, margin)
+    totals = calculate_final_price(
+        material_cost,
+        labor_cost,
+        tax_rate,
+        margin,
+        is_residential_property,
+    )
     return EstimateResult(
         roof_type=roof_type,
         pricing_mode=pricing_mode,
@@ -451,6 +485,8 @@ def estimate_from_roof_area(
         labor_cost=totals["labor_cost"],
         base_cost=totals["base_cost"],
         tax_amount=totals["tax_amount"],
+        tax_rate=totals["tax_rate"],
+        is_residential_property=totals["is_residential_property"],
         complexity_multiplier=complexity,
         final_price=totals["final_price"],
         line_items=lines,
@@ -468,6 +504,7 @@ def estimate_retail_range_from_roof_area(
     labor_rate: float = 0,
     facet_count: int = 1,
     tax_rate: float = 0,
+    is_residential_property: bool = True,
     complexity_alpha: float = 0.02,
 ) -> EstimateRangeResult:
     """Retail estimate range using lower and upper workbook prices."""
@@ -483,6 +520,7 @@ def estimate_retail_range_from_roof_area(
         "labor_rate": labor_rate,
         "facet_count": facet_count,
         "tax_rate": tax_rate,
+        "is_residential_property": is_residential_property,
         "complexity_alpha": complexity_alpha,
     }
     lower = estimate_from_roof_area(price_level="low", **common_args)
@@ -647,7 +685,9 @@ def print_estimate(result: EstimateResult) -> None:
     print("")
     print(f"Material cost: ${result.material_cost:.2f}")
     print(f"Labor cost: ${result.labor_cost:.2f}")
-    print(f"Taxes/permits: ${result.taxes:.2f}")
+    print(f"Tax amount: ${result.tax_amount:.2f}")
+    print(f"Tax rate applied: {result.tax_rate:.2%}")
+    print(f"Residential property: {result.is_residential_property}")
     print(f"Complexity multiplier: {result.complexity_multiplier:.4f}")
     print(f"Base cost: ${result.base_cost:.2f}")
     print(f"Final price with 33% margin: ${result.final_price:.2f}")
@@ -865,7 +905,20 @@ def main() -> None:
     parser.add_argument("--waste-factor", type=float, default=0.1)
     parser.add_argument("--labor-rate", type=float, default=0)
     parser.add_argument("--facet-count", type=int, default=1)
-    parser.add_argument("--taxes", type=float, default=0)
+    parser.add_argument(
+        "--property-type",
+        choices=("residential", "commercial"),
+        default="residential",
+        help="Tax percentage is applied only to residential estimates.",
+    )
+    parser.add_argument(
+        "--tax-rate",
+        "--taxes",
+        dest="tax_percent",
+        type=float,
+        default=0,
+        help="Tax percentage, for example 8.25 for 8.25%%. Applies only to residential.",
+    )
     parser.add_argument("--complexity-alpha", type=float, default=0.02)
     parser.add_argument(
         "--quantity-override",
@@ -884,7 +937,8 @@ def main() -> None:
         "quantity_overrides": parse_quantity_overrides(args.quantity_override),
         "labor_rate": args.labor_rate,
         "facet_count": args.facet_count,
-        "taxes": args.taxes,
+        "tax_rate": args.tax_percent / 100,
+        "is_residential_property": args.property_type == "residential",
         "complexity_alpha": args.complexity_alpha,
     }
     if args.pricing_mode == "retail" and not args.single_retail_estimate:

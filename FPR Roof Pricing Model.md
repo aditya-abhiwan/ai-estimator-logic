@@ -4,7 +4,9 @@ This document defines the FPR pricing model used by the Python estimator.
 
 The model keeps the original FPR roof geometry, material quantity, complexity, and labor logic, but uses one deterministic final pricing rule:
 
-FinalPrice = (material_cost + labor_cost) * 1.33 + taxes
+FinalPrice = ((material_cost + labor_cost) * 1.33) * (1 + residential_tax_rate)
+
+Tax is a percentage and is applied only for residential properties. For non-residential properties, the effective tax rate is 0%.
 
 The 33% margin is fixed and applied once at the end. There is no overhead multiplier and no per-line markup.
 
@@ -20,7 +22,8 @@ The 33% margin is fixed and applied once at the end. There is no overhead multip
   - c_i = unit coverage.
   - qty_i = calculated quantity.
 - L_base = labor cost per square foot.
-- T = taxes and permits.
+- tax_rate = residential tax percentage as a decimal, for example 0.05 for 5%.
+- is_residential_property = whether the estimate is for a residential property.
 - Fixed margin = 33%.
 
 ## 2. Geometry Conversion
@@ -187,22 +190,25 @@ base_cost = material_cost + labor_cost
 
 ## 10. Final Price
 
-The final price applies the fixed 33% margin once and then adds taxes or permits:
+The final price applies the fixed 33% margin once, then applies tax as a percentage only for residential properties:
 
 ```text
-FinalPrice = base_cost * 1.33 + T
+effective_tax_rate = tax_rate if is_residential_property else 0
+FinalPrice = base_cost * 1.33 * (1 + effective_tax_rate)
 ```
 
 Expanded:
 
 ```text
-FinalPrice = (material_cost + labor_cost) * 1.33 + T
+FinalPrice = (material_cost + labor_cost) * 1.33 * (1 + effective_tax_rate)
 ```
 
 Important rules:
 
 - Margin is applied only once.
 - Margin is fixed at 33%.
+- Tax is a percentage.
+- Tax applies only to residential properties.
 - No per-line markup is allowed.
 - No overhead multiplier is used.
 - No compounding formula like `(1 + overhead) * (1 + margin)` is used.
@@ -226,7 +232,8 @@ Insurance mode uses the insurance price when available, otherwise it falls back 
 4. line_cost = quantity * unit_price
 5. material_cost = sum(line_cost)
 6. labor_cost = labor_rate * roof_area * complexity_multiplier
-7. final_price = (material_cost + labor_cost) * 1.33 + taxes
+7. effective_tax_rate = tax_rate if residential else 0
+8. final_price = (material_cost + labor_cost) * 1.33 * (1 + effective_tax_rate)
 ```
 
 This is the model developers should use for automated quote generation.

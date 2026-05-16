@@ -27,6 +27,17 @@ class RoofPricingModelTests(unittest.TestCase):
         self.assertEqual(totals["tax_amount"], expected_tax_amount)
         self.assertEqual(totals["final_price"], 1200 * 1.33 + expected_tax_amount)
 
+    def test_tax_rate_applies_only_to_residential_property(self):
+        totals = pricing.calculate_final_price(
+            material_cost=1000,
+            tax_rate=0.05,
+            is_residential_property=False,
+        )
+
+        self.assertEqual(totals["tax_rate"], 0)
+        self.assertEqual(totals["tax_amount"], 0)
+        self.assertEqual(totals["final_price"], 1000 * 1.33)
+
     def test_margin_cannot_be_changed(self):
         with self.assertRaisesRegex(ValueError, "Margin is locked"):
             pricing.calculate_final_price(1000, margin=0.25)
@@ -58,6 +69,19 @@ class RoofPricingModelTests(unittest.TestCase):
         self.assertLess(result.lower.final_price, result.upper.final_price)
         self.assertEqual(result.lower.price_level, "low")
         self.assertEqual(result.upper.price_level, "high")
+
+    def test_estimate_to_dict_includes_tax_fields(self):
+        result = pricing.estimate_from_quantities(
+            "Shingle (Class 3)",
+            {"Field Shingles": 1},
+            "retail",
+            tax_rate=0.05,
+        )
+
+        data = result.to_dict()
+        self.assertIn("tax_amount", data)
+        self.assertEqual(data["tax_rate"], 0.05)
+        self.assertTrue(data["is_residential_property"])
 
     def test_workbook_labor_row_becomes_labor_cost_for_tpo(self):
         components = pricing.load_component_prices()["TPO"]

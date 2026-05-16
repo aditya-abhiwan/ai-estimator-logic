@@ -90,7 +90,10 @@ def component_rows(components: list[pricing.ComponentPrice]) -> list[dict[str, s
 
 def main() -> None:
     st.title("FPR Roof Pricing Estimator")
-    st.caption("Deterministic pricing: material + labor, fixed 33% margin once, then taxes.")
+    st.caption(
+        "Deterministic pricing: material + labor, fixed 33% margin once, "
+        "then residential tax percentage."
+    )
 
     try:
         prices_by_roof = load_prices()
@@ -106,6 +109,11 @@ def main() -> None:
     with st.sidebar:
         st.header("Job Setup")
         roof_type = st.selectbox("Roof type", roof_types)
+        property_type = st.segmented_control(
+            "Property type",
+            options=["residential", "commercial"],
+            default="residential",
+        )
         pricing_mode = st.segmented_control(
             "Pricing mode",
             options=["retail", "insurance"],
@@ -148,11 +156,13 @@ def main() -> None:
             step=0.25,
         )
         tax_percent = st.number_input(
-            "Tax rate (%)",
+            "Residential tax rate (%)",
             min_value=0.0,
             value=0.0,
             step=0.5,
         )
+        if property_type != "residential":
+            st.caption("Tax percentage is ignored for non-residential properties.")
 
     components = prices_by_roof[roof_type]
     required_override_components = [
@@ -200,6 +210,7 @@ def main() -> None:
             "labor_rate": labor_rate,
             "facet_count": int(facet_count),
             "tax_rate": tax_percent / 100,
+            "is_residential_property": property_type == "residential",
             "complexity_alpha": complexity_alpha_percent / 100,
         }
         if pricing_mode == "retail":
@@ -253,15 +264,16 @@ def main() -> None:
         st.dataframe(line_rows(result), use_container_width=True, hide_index=True)
 
     st.subheader("Formula Check")
+    effective_tax_rate = detail_source.tax_rate
     if isinstance(result, pricing.EstimateRangeResult):
         st.code(
             (
                 "Lower: "
                 f"({money(result.lower.material_cost)} + {money(result.lower.labor_cost)}) "
-                f"* 1.33 * (1 + {tax_percent/100:.2%}) = {money(result.lower.final_price)}\n"
+                f"* 1.33 * (1 + {effective_tax_rate:.2%}) = {money(result.lower.final_price)}\n"
                 "Upper: "
                 f"({money(result.upper.material_cost)} + {money(result.upper.labor_cost)}) "
-                f"* 1.33 * (1 + {tax_percent/100:.2%}) = {money(result.upper.final_price)}"
+                f"* 1.33 * (1 + {effective_tax_rate:.2%}) = {money(result.upper.final_price)}"
             ),
             language="text",
         )
@@ -269,7 +281,7 @@ def main() -> None:
         st.code(
             (
                 f"({money(result.material_cost)} + {money(result.labor_cost)}) "
-                f"* 1.33 * (1 + {tax_percent/100:.2%}) = {money(result.final_price)}"
+                f"* 1.33 * (1 + {effective_tax_rate:.2%}) = {money(result.final_price)}"
             ),
             language="text",
         )
