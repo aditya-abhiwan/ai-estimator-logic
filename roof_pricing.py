@@ -930,7 +930,12 @@ def _clean_header(value: Any) -> str:
 
 
 def _row_dict(headers: list[str], row: list[Any]) -> dict[str, Any]:
-    return {headers[index]: row[index] if index < len(row) else "" for index in range(len(headers))}
+    values: dict[str, Any] = {}
+    for index, header in enumerate(headers):
+        if header in values:
+            continue
+        values[header] = row[index] if index < len(row) else ""
+    return values
 
 
 def _extract_price_range(values: dict[str, Any]) -> PriceRange | None:

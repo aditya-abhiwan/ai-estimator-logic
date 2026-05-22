@@ -208,6 +208,37 @@ class RoofPricingModelTests(unittest.TestCase):
         self.assertIn("TPO", roof_types)
         self.assertGreater(len(roof_types["TPO"]), 1)
 
+    def test_standing_seam_uses_per_square_quantities_and_price_range(self):
+        prices = pricing.load_component_prices()
+        standing_seam = {
+            component.material: component
+            for component in prices["Standing Seam"]
+        }
+
+        self.assertEqual(standing_seam["Material and Labor"].price.lower, 680)
+        self.assertEqual(standing_seam["Material and Labor"].price.upper, 730)
+
+        result = pricing.estimate_retail_range_from_roof_area(
+            "Standing Seam",
+            plan_area_sqft=2000,
+            pitch="6:12",
+            waste_factor=0.1,
+        )
+
+        lower_quantities = {
+            line.material: line.quantity
+            for line in result.lower.line_items
+        }
+        self.assertAlmostEqual(
+            lower_quantities["Material and Labor"],
+            (pricing.calculate_roof_area(2000, "6:12") / 100) * 1.1,
+        )
+        self.assertAlmostEqual(
+            lower_quantities["Tear Off"],
+            pricing.calculate_roof_area(2000, "6:12") / 100,
+        )
+        self.assertEqual(lower_quantities["Decking"], 4)
+
 
 if __name__ == "__main__":
     unittest.main()

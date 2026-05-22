@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from . import common, modified, shingles, stone_coated_steel, synthetic_tile_brava, tpo
+from . import common, modified, shingles, standing_seam, stone_coated_steel, synthetic_tile_brava, tpo
 
 
 QuantityCalculator = Callable[[Any, common.QuantityContext], float]
@@ -12,6 +12,8 @@ ROOF_TYPE_CALCULATORS: dict[str, QuantityCalculator] = {
     "Shingle (Class 3)": shingles.calculate_quantity,
     "Shingles (Class 4)": shingles.calculate_quantity,
     "Stone Coated Steel": stone_coated_steel.calculate_quantity,
+    "Standing Seam": standing_seam.calculate_quantity,
+    "Standing Seam Metal": standing_seam.calculate_quantity,
     "Synthetic Tile (Brava)": synthetic_tile_brava.calculate_quantity,
     "TPO": tpo.calculate_quantity,
     "Modified": modified.calculate_quantity,
