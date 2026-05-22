@@ -1,0 +1,156 @@
+[
+  {
+    "Material": "Field Tiles",
+    "Description": "Field tiles are the main tiles installed across the flat areas of roof. Class 4 rating means these tiles have been tested to withstand larger hail impacts than standard concrete or clay tiles.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 7.41,
+    "Price Per Unit (Upper)": 7.41
+  },
+  {
+    "Material": "Hip and Ridge",
+    "Description": "Hip and ridge tiles are specially shaped tiles installed along the roof's peak and angled outside corners. These areas take the most wind pressure, so these tiles are thicker and stronger than regular field tiles. Class 4 are rated to withstand up to 2\" hail storms.",
+    "Unit of Measurement": "Box",
+    "Price Per Unit (Lower)": 230.05,
+    "Price Per Unit (Upper)": 230.05
+  },
+  {
+    "Material": "Synthetic Felt",
+    "Description": "This serves as a protective moisture barrier between the roof deck and shingles. Engineered using wove polymer technology",
+    "Unit of Measurement": "Roll (10 Squares)",
+    "Price Per Unit (Lower)": 89,
+    "Price Per Unit (Upper)": 120
+  },
+  {
+    "Material": "Ice and Water Underlayment",
+    "Description": "Ice and water underlayment is a self-adhering, water-proof membrane Installed in the most vulnerable areas of your roof- such as valleys, eaves, around skylights, and along roof penetrations. This material seals tightly around nails and fasteners.",
+    "Unit of Measurement": "Roll (1 Square)",
+    "Price Per Unit (Lower)": 55,
+    "Price Per Unit (Upper)": 120
+  },
+  {
+    "Material": "Rake Trim",
+    "Description": "Rake Trim is a finishing piece installed along the sloped edges of a stone coated steel roof. It protects these exposed edges from wind-driven rain, uplift, and debris, which are common stress points on any roof system.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 10,
+    "Price Per Unit (Upper)": 10
+  },
+  {
+    "Material": "Eave Trim",
+    "Description": "Eave Trim is a finishing piece installed along the horizontal edges of a stone coated steel roof. It protects these exposed edges from wind-driven rain, uplift, and debris, which are common stress points on any roof system.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 7.73,
+    "Price Per Unit (Upper)": 7.73
+  },
+  {
+    "Material": "Pipe Boot Flashing",
+    "Description": "Pipe boot flashing is a protective, waterproof seal installed around plumbing vent pipes that come up through the roof. It combines a flexible boot with a metal base that fits tightly around the pipe and is layered into the shingles.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 8,
+    "Price Per Unit (Upper)": 16
+  },
+  {
+    "Material": "Versa Caps",
+    "Description": "Versa Caps are a metal cap that is installed on top of metal vents coming through the roof. These are often damaged significantly from hail damage and are often replaced.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 20,
+    "Price Per Unit (Upper)": 44
+  },
+  {
+    "Material": "Attic Ventilation",
+    "Description": "There are many types of attic ventilation such as: low profile vents, whirley birds, powered vents, and solar vents. These vents allow the air in the attic to circulate through and cools the roof and attic.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 19.5,
+    "Price Per Unit (Upper)": 446
+  },
+  {
+    "Material": "Foam Insulation",
+    "Description": "Foam insulation is installed beneath the stone-coated steel panels to improve energy efficiency and overall perfomance. This rigid foam layer adds thermal insulation, helping keep the home cooler in the summer and warmer in the winter by reducing hear transfer through the roof.",
+    "Unit of Measurement": "Bundle",
+    "Price Per Unit (Lower)": 119.28,
+    "Price Per Unit (Upper)": 119.28
+  },
+  {
+    "Material": "Step Flashing",
+    "Description": "Step Flashing is a series of small, individual metal pieces installed where the roof meets a vertical surface, such as a wall or chimney. Each piece is layered in a \"step-by-step\" pattern between the shingles and wall.",
+    "Unit of Measurement": "Bundle (100)",
+    "Price Per Unit (Lower)": 65.25,
+    "Price Per Unit (Upper)": 65.25
+  },
+  {
+    "Material": "Z Bar",
+    "Description": "Z-bar flashing is a specially shaped metal flashing installed where the roof meets vertical surfaces, such as walls, chimneys, or headwalls. Its \"Z\" profile allows it to tuck behind the siding or wall covering while overlapping the roofing panels below.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 7.73,
+    "Price Per Unit (Upper)": 7.73
+  },
+  {
+    "Material": "Valley Tray",
+    "Description": "A valley tray is a heavy-duty metal channel installed in the valleys of a stone-coated steel roof. The tray provides a wide, durable pathway that guides rainwater safely down the roof and away from the home.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 8.64,
+    "Price Per Unit (Upper)": 8.64
+  },
+  {
+    "Material": "Cap Nails",
+    "Description": "Cap nails are specialized fasteners used to secure roofing materials like synthetic underlayment. The wide plastic cap holds the material in place without tearing it, ensuring a strong and long-lasting installation.",
+    "Unit of Measurement": "Box (2000)",
+    "Price Per Unit (Lower)": 17,
+    "Price Per Unit (Upper)": 17
+  },
+  {
+    "Material": "2x2 Board",
+    "Description": "A 2x2 is a 2\" by 2\" piece of lumber that is installed over the roof deck to create a raised framework for the stone-coated steel panels to sit on.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 3.1,
+    "Price Per Unit (Upper)": 3.1
+  },
+  {
+    "Material": "Caulking",
+    "Description": "Caulking is a flexible sealant used to fill gaps, cracks, and seams on your roof or around roof penetrations. It prevents water, air, and debris from entering the home.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 8.87,
+    "Price Per Unit (Upper)": 8.87
+  },
+  {
+    "Material": "1x2 batten",
+    "Description": "A 1x2 is a 1\" by 2\" piece of lumber that is installed over the roof deck to create a raised framework for the stone-coated steel panels to sit on.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 1.55,
+    "Price Per Unit (Upper)": 1.55
+  },
+  {
+    "Material": "Screws",
+    "Description": "Screws are installed through the panels into the wood framework of the 2x2's to allow for secure fastening.",
+    "Unit of Measurement": "Box (2000)",
+    "Price Per Unit (Lower)": 304.1,
+    "Price Per Unit (Upper)": 304.1
+  },
+  {
+    "Material": "Nails for 2x2's",
+    "Description": "Nails secure the 2x2's into the roofs decking to ensure 2x2's are fastened correcly and are not vulnerable to uplift.",
+    "Unit of Measurement": "Box",
+    "Price Per Unit (Lower)": 191.3,
+    "Price Per Unit (Upper)": 191.3
+  },
+  {
+    "Material": "Granules",
+    "Description": "Granules are installed on top of caulking to ensure a similar texture to the stone-coated steel panels at all seams. It also protects the caulking from UV rays.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 4.55,
+    "Price Per Unit (Upper)": 4.55
+  },
+  {
+    "Material": "Decking",
+    "Description": "Decking is the solid surface, usually made of plywood or OSB, that forms the bes of the roof. It provides structural support for shingles and roofing materials.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Lower)": 17.98,
+    "Price Per Unit (Upper)": 23.98
+  },
+  {
+    "Material": "Labor",
+    "Description": "Price for crew to install materials",
+    "Unit of Measurement": "Per square",
+    "Price Per Unit (Lower)": 200,
+    "Price Per Unit (Upper)": 250
+  }
+]

@@ -68,7 +68,7 @@ def component_rows(components: list[pricing.ComponentPrice]) -> list[dict[str, s
         if pricing.is_labor_component(component):
             coverage = "Labor rate per square"
         elif component.coverage_sqft is None:
-            coverage = "Requires quantity override"
+            coverage = "Calculated by estimator"
         else:
             coverage = f"{component.coverage_sqft:g} sq ft"
         rows.append(
@@ -136,13 +136,6 @@ def main() -> None:
         )
 
         st.header("Labor And Taxes")
-        labor_rate = st.number_input(
-            "Manual labor rate override ($ / roof sq ft)",
-            min_value=0.0,
-            value=0.0,
-            step=0.25,
-        )
-        st.caption("Leave 0 to use workbook Labor rows when available.")
         facet_count = st.number_input(
             "Facet count",
             min_value=1,
@@ -165,37 +158,11 @@ def main() -> None:
             st.caption("Tax percentage is ignored for non-residential properties.")
 
     components = prices_by_roof[roof_type]
-    required_override_components = [
-        component
-        for component in components
-        if component.coverage_sqft is None and not pricing.is_labor_component(component)
-    ]
-
-    st.subheader("Quantity Overrides")
-    st.write(
-        "Area-based components are calculated from roof area and waste. "
-        "Components without area coverage need explicit quantities."
-    )
-
-    quantity_overrides: dict[str, float] = {}
-    if required_override_components:
-        columns = st.columns(3)
-        for index, component in enumerate(required_override_components):
-            with columns[index % len(columns)]:
-                quantity_overrides[component.material] = st.number_input(
-                    f"{component.material} ({component.unit})",
-                    min_value=0.0,
-                    value=0.0,
-                    step=1.0,
-                    key=f"override_{roof_type}_{component.material}",
-                )
-    else:
-        st.info("This roof type has no required quantity overrides.")
 
     with st.expander("Component pricing loaded from workbook"):
-        st.dataframe(component_rows(components), use_container_width=True, hide_index=True)
+        st.dataframe(component_rows(components), width="stretch", hide_index=True)
 
-    calculate = st.button("Calculate Estimate", type="primary", use_container_width=True)
+    calculate = st.button("Calculate Estimate", type="primary", width="stretch")
 
     if not calculate:
         return
@@ -206,8 +173,6 @@ def main() -> None:
             "plan_area_sqft": plan_area,
             "pitch": pitch,
             "waste_factor": waste_factor_percent / 100,
-            "quantity_overrides": quantity_overrides,
-            "labor_rate": labor_rate,
             "facet_count": int(facet_count),
             "tax_rate": tax_percent / 100,
             "is_residential_property": property_type == "residential",
@@ -259,9 +224,9 @@ def main() -> None:
 
     st.subheader("Line Items")
     if isinstance(result, pricing.EstimateRangeResult):
-        st.dataframe(range_line_rows(result), use_container_width=True, hide_index=True)
+        st.dataframe(range_line_rows(result), width="stretch", hide_index=True)
     else:
-        st.dataframe(line_rows(result), use_container_width=True, hide_index=True)
+        st.dataframe(line_rows(result), width="stretch", hide_index=True)
 
     st.subheader("Formula Check")
     effective_tax_rate = detail_source.tax_rate
@@ -285,6 +250,16 @@ def main() -> None:
             ),
             language="text",
         )
+
+    with st.expander("Calculation Logs", expanded=True):
+        if isinstance(result, pricing.EstimateRangeResult):
+            low_tab, high_tab = st.tabs(["Retail Low", "Retail High"])
+            with low_tab:
+                st.code("\n".join(result.lower.calculation_log), language="text")
+            with high_tab:
+                st.code("\n".join(result.upper.calculation_log), language="text")
+        else:
+            st.code("\n".join(result.calculation_log), language="text")
 
     try:
         weightages = load_weightages()
@@ -338,7 +313,7 @@ def main() -> None:
                         }
                         for material, amounts in allocation.items()
                     ],
-                    use_container_width=True,
+                    width="stretch",
                     hide_index=True,
                 )
     except Exception:

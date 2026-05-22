@@ -1,0 +1,128 @@
+[
+  {
+    "Material": "Field Tiles",
+    "Description": "These synthetic tiles are the main tiles installed across the flat areas of the roof These tiles are designed to replicate the look of natural materials like slate, shake, or clay.",
+    "Unit of Measurement": "Bundle (12 Pieces)",
+    "Price Per Unit (Upper)": 41.05,
+    "Price Per Unit (Lower)": 41.05
+  },
+  {
+    "Material": "Hip and Ridge",
+    "Description": "Brava Hip and ridge tiles a specially shaped synthetic tiles installed along the roof's peaks and angled corners. By matching the look and texture of field tiles, hip and ridge tiles complete the system both structurally and aesthetically.",
+    "Unit of Measurement": "Bundle (10 Pieces)",
+    "Price Per Unit (Upper)": 69.78,
+    "Price Per Unit (Lower)": 69.78
+  },
+  {
+    "Material": "Synthetic Felt",
+    "Description": "This serves as a protective moisture barrier between the roof deck and shingles. Engineered using wove polymer technology",
+    "Unit of Measurement": "Roll (10 squares)",
+    "Price Per Unit (Upper)": 159.8,
+    "Price Per Unit (Lower)": 84
+  },
+  {
+    "Material": "Ice and Water Underlayment",
+    "Description": "Ice and water underlayment is a self-adhering, water-proof membrane Installed in the most vulnerable areas of your roof- such as valleys, eaves, around skylights, and along roof penetrations. This material seals tightly around nails and fasteners.",
+    "Unit of Measurement": "Roll (1 Squares)",
+    "Price Per Unit (Upper)": 139.5,
+    "Price Per Unit (Lower)": 55
+  },
+  {
+    "Material": "Drip Edge",
+    "Description": "Drip edge is a metal flashing installed along the edges of the roof- both eaves and rakes. Its purpose is to guide water away from the roof deck and into the gutters, preventing water from curling back under the shingles or damaging the fascia.",
+    "Unit of Measurement": "Each (10 Linear Feet)",
+    "Price Per Unit (Upper)": 9.1,
+    "Price Per Unit (Lower)": 6.1
+  },
+  {
+    "Material": "Pipe Boot Flashing",
+    "Description": "Pipe boot flashing is a protective, waterproof seal installed around plumbing vent pipes that come up through the roof. It combines a flexible boot with a metal base that fits tightly around the pipe and is layered into the shingles.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 16.98,
+    "Price Per Unit (Lower)": 8.38
+  },
+  {
+    "Material": "Versa Caps",
+    "Description": "Versa Caps are a metal cap that is installed on top of metal vents coming through the roof. These are often damaged significantly from hail damage and are often replaced.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 44.31,
+    "Price Per Unit (Lower)": 19.98
+  },
+  {
+    "Material": "Attic Ventilation",
+    "Description": "There are many types of attic ventilation such as: low profile vents, whirley birds, powered vents, and solar vents. These vents allow the air in the attic to circulate through and cools the roof and attic.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 446.75,
+    "Price Per Unit (Lower)": 19.5
+  },
+  {
+    "Material": "Brava Starter",
+    "Description": "Brava starter tiles are the first course of synthetic tiles installed along the lower edge of the roof before the main field tiles are laid. Their purpose is to create a straight, secure foundation that locks in the bottom row of the roofing system.",
+    "Unit of Measurement": "Bundle(10 Pieces)",
+    "Price Per Unit (Upper)": 51.3,
+    "Price Per Unit (Lower)": 51.3
+  },
+  {
+    "Material": "Step Flashing",
+    "Description": "Step Flashing is a series of small, individual metal pieces installed where the roof meets a vertical surface, such as a wall or chimney. Each piece is layered in a \"step-by-step\" pattern between the shingles and wall.",
+    "Unit of Measurement": "Bundle of 100",
+    "Price Per Unit (Upper)": 65.25,
+    "Price Per Unit (Lower)": 65.25
+  },
+  {
+    "Material": "Valley Metal",
+    "Description": "Valley metal is a protective metal lining installed along the valleys of the roof. Its job is to channel water away safely and prevent leaks in these high-traffic water areas.",
+    "Unit of Measurement": "Roll (50 Linear Feet)",
+    "Price Per Unit (Upper)": 122.9,
+    "Price Per Unit (Lower)": 75.45
+  },
+  {
+    "Material": "Cap Nails",
+    "Description": "Cap nails are specialized fasteners used to secure roofing materials like synthetic underlayment. The wide plastic cap holds the material in place without tearing it, ensuring a strong and long-lasting installation.",
+    "Unit of Measurement": "Box (2000)",
+    "Price Per Unit (Upper)": 17.3,
+    "Price Per Unit (Lower)": 17.3
+  },
+  {
+    "Material": "Roofing Nails",
+    "Description": "Roofing nails come in a coiled strip used with a nail gun. They provide secure fastening and consistent spacing, helping your roof perform reliably over time.",
+    "Unit of Measurement": "Box (7200)",
+    "Price Per Unit (Upper)": 54,
+    "Price Per Unit (Lower)": 54
+  },
+  {
+    "Material": "Caulking",
+    "Description": "Caulking is a flexible sealant used to fill gaps, cracks, and seams on your roof or around roof penetrations. It prevents water, air, and debris from entering the home.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 8.07,
+    "Price Per Unit (Lower)": 6.13
+  },
+  {
+    "Material": "Paint",
+    "Description": "Paint is applied to the metal components of the roof for protection and aesthetics. It helps prevent rust and weathering while giving the roof a finished, clean appearance.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 8.96,
+    "Price Per Unit (Lower)": 8.96
+  },
+  {
+    "Material": "Solid Tiles for Rake and Valley",
+    "Description": "Solid synthetic tiles are specially deisgned synthetic roofing tiles used to finish and protect the exposed edges and transition points of the roof.",
+    "Unit of Measurement": "Bundle (5 Pieces)",
+    "Price Per Unit (Upper)": 58.24,
+    "Price Per Unit (Lower)": 58.24
+  },
+  {
+    "Material": "Decking",
+    "Description": "Decking is the solid surface, usually made of plywood or OSB, that forms the bes of the roof. It provides structural support for shingles and roofing materials.",
+    "Unit of Measurement": "Each (32 sq ft)",
+    "Price Per Unit (Upper)": 23.98,
+    "Price Per Unit (Lower)": 17.98
+  },
+  {
+    "Material": "Labor",
+    "Description": "Price for crew to install materials",
+    "Unit of Measurement": "Per square",
+    "Price Per Unit (Upper)": 250,
+    "Price Per Unit (Lower)": 200
+  }
+]

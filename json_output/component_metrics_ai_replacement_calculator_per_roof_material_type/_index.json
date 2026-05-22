@@ -1,0 +1,74 @@
+[
+  {
+    "sheet": "Shingle (Class 3)",
+    "file": "Shingle_(Class_3).json",
+    "records": 17,
+    "headers": [
+      "Material",
+      "Description",
+      "Unit of Measurement",
+      "Price Per Unit (Lower)",
+      "Price Per Unit (Upper)"
+    ]
+  },
+  {
+    "sheet": "Shingles (Class 4)",
+    "file": "Shingles_(Class_4).json",
+    "records": 17,
+    "headers": [
+      "Material",
+      "Description",
+      "Unit of Measurement",
+      "Price Per Unit (Lower)",
+      "Price Per Unit (Upper)"
+    ]
+  },
+  {
+    "sheet": "Stone Coated Steel",
+    "file": "Stone_Coated_Steel.json",
+    "records": 22,
+    "headers": [
+      "Material",
+      "Description",
+      "Unit of Measurement",
+      "Price Per Unit (Lower)",
+      "Price Per Unit (Upper)"
+    ]
+  },
+  {
+    "sheet": "Synthetic Tile (Brava)",
+    "file": "Synthetic_Tile_(Brava).json",
+    "records": 18,
+    "headers": [
+      "Material",
+      "Description",
+      "Unit of Measurement",
+      "Price Per Unit (Lower)",
+      "Price Per Unit (Upper)"
+    ]
+  },
+  {
+    "sheet": "TPO",
+    "file": "TPO.json",
+    "records": 18,
+    "headers": [
+      "Material",
+      "Description",
+      "Unit of Measurement",
+      "Price Per Unit (Lower)",
+      "Price Per Unit (Upper)"
+    ]
+  },
+  {
+    "sheet": "Modified",
+    "file": "Modified.json",
+    "records": 15,
+    "headers": [
+      "Material",
+      "Description",
+      "Unit of Measurement",
+      "Price Per Unit (Lower)",
+      "Price Per Unit (Upper)"
+    ]
+  }
+]

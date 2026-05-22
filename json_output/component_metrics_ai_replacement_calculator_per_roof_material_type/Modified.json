@@ -1,0 +1,107 @@
+[
+  {
+    "Material": "Modified Cap Sheet",
+    "Description": "A modified cap sheet is a durable roofing layer made of asphalt enhanced with polymers and reinforced with fiberglass or polyester, providing superior flexibility, weather resistance, and UV protection compared to standard asphalt.",
+    "Unit of Measurement": "Roll (1 square)",
+    "Price Per Unit (Upper)": 125,
+    "Price Per Unit (Lower)": 100
+  },
+  {
+    "Material": "Base Sheet",
+    "Description": "A modified base sheet is the foundation layer in a roofing system, made of asphalt blended with polymers and reinforced with fiberglass or polyester. It provides strength, flexibility, and a stable surface for the cap sheet to adhere to, ensuring the roof system is durable and weather‑resistant.",
+    "Unit of Measurement": "Roll (2 squares)",
+    "Price Per Unit (Upper)": 131,
+    "Price Per Unit (Lower)": 131
+  },
+  {
+    "Material": "Asphalt Primer",
+    "Description": "An asphalt primer is a thin liquid coating applied to roofing surfaces before installing membranes or sheets. It penetrates and seals the surface, improving adhesion and ensuring the roofing layers bond securely for a longer‑lasting, watertight system.",
+    "Unit of Measurement": "5 Gal",
+    "Price Per Unit (Upper)": 125,
+    "Price Per Unit (Lower)": 60
+  },
+  {
+    "Material": "Insulation (ISO)",
+    "Description": "ISO is a rigid foam board placed under the roof membrane to add insulation and energy efficiency. It offers one of the highest R‑values per inch, helping reduce heating and cooling costs while providing a stable surface for the roofing system.",
+    "Unit of Measurement": "Each (32 sq ft)",
+    "Price Per Unit (Upper)": "2.2\" thick $2976",
+    "Price Per Unit (Lower)": "1\" thick $17.39"
+  },
+  {
+    "Material": "ISO Plates and Screws",
+    "Description": "ISO plates and screws are the fasteners used to secure insulation boards (like ISO) to the roof deck. The plates spread pressure across the board to prevent damage, while the screws anchor everything firmly in place. Together, they keep the insulation stable and ensure the roofing system performs as designed.",
+    "Unit of Measurement": "Box (1000)",
+    "Price Per Unit (Upper)": 380.71,
+    "Price Per Unit (Lower)": 380.71
+  },
+  {
+    "Material": "Modified Flashing Roll",
+    "Description": "A modified flashing roll is a flexible, asphalt‑based material reinforced with polymers, designed to seal roof edges, joints, and penetrations. It provides a watertight barrier and ties the roof system together, preventing leaks where different surfaces meet",
+    "Unit of Measurement": "Roll (1 square)",
+    "Price Per Unit (Upper)": 120,
+    "Price Per Unit (Lower)": 120
+  },
+  {
+    "Material": "Gravel Stop",
+    "Description": "Gravel stop edge flashing is a metal trim installed along the perimeter of a roof to secure the edges of roofing materials and prevent loose gravel or debris from washing off. It also directs water away from the roof edge, protecting fascia and walls while giving the roof a clean, finished look",
+    "Unit of Measurement": "Each (10 linear feet)",
+    "Price Per Unit (Upper)": 14.73,
+    "Price Per Unit (Lower)": 14.73
+  },
+  {
+    "Material": "Pipe Boots",
+    "Description": "A lead jack pipe boot is a protective flashing piece made of malleable lead, installed around roof penetrations such as plumbing vent pipes. It forms a watertight seal by molding tightly to the pipe and roof surface, preventing leaks while allowing long‑term durability against weather and movement.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 50,
+    "Price Per Unit (Lower)": 38
+  },
+  {
+    "Material": "Cant Strip",
+    "Description": "A cant strip is a beveled piece of wood, fiberboard, or other material installed at the angle where a flat roof meets a vertical surface (like a wall or curb). Its sloped shape eases the transition between surfaces, helping roofing membranes bend smoothly without cracking and improving water runoff at those joints.",
+    "Unit of Measurement": "Bundle (96 Linear feet)",
+    "Price Per Unit (Upper)": 63.53,
+    "Price Per Unit (Lower)": 63.53
+  },
+  {
+    "Material": "Termination Bar",
+    "Description": "A termination bar is a metal strip used to secure the edge of a roofing membrane to a wall or vertical surface. It provides a clean, tight finish and prevents water from getting behind the membrane. Termination bars are typically fastened with screws and sealed to ensure long‑lasting protection at roof transitions.",
+    "Unit of Measurement": "Each (10 linear feet)",
+    "Price Per Unit (Upper)": 10.45,
+    "Price Per Unit (Lower)": 10.45
+  },
+  {
+    "Material": "Sealant",
+    "Description": "Sealant is a flexible, protective material applied to joints, seams, or penetrations in a roof system. Its job is to fill gaps and create a watertight barrier, preventing leaks while allowing the roof to expand and contract with temperature changes.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 8.15,
+    "Price Per Unit (Lower)": 8.15
+  },
+  {
+    "Material": "Drains",
+    "Description": "TPO drains are roof drains designed to integrate with the TPO membrane system. They provide a watertight connection where water exits the roof, preventing leaks at one of the most critical points. The TPO membrane is heat‑welded to the drain flange, ensuring durability and long‑term performance.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 120.15,
+    "Price Per Unit (Lower)": 120.15
+  },
+  {
+    "Material": "Extra Granules",
+    "Description": "Extra granules are loose roofing granules applied over fresh sealant or asphalt to match the surrounding roof surface. They help protect exposed areas from UV damage, improve durability, and blend repairs seamlessly with the existing roof finish.",
+    "Unit of Measurement": "Each (50 Pounds)",
+    "Price Per Unit (Upper)": 82,
+    "Price Per Unit (Lower)": 59
+  },
+  {
+    "Material": "Plastic Cement",
+    "Description": "Plastic cement is a thick, asphalt‑based adhesive used in roofing to seal joints, flashings, and small repairs. It stays pliable, creating a watertight bond that resists cracking and weathering, making it ideal for patching leaks or securing materials in place.",
+    "Unit of Measurement": "5 Gal",
+    "Price Per Unit (Upper)": 100,
+    "Price Per Unit (Lower)": 60
+  },
+  {
+    "Material": "Labor",
+    "Description": "Labor refers to the skilled work performed by roofing crews during installation or repair. It includes tasks such as preparing the roof deck, installing insulation, fastening membranes, and sealing details. Quality labor ensures the roofing system is installed correctly, watertight, and built to last.",
+    "Unit of Measurement": "Per square",
+    "Price Per Unit (Upper)": 200,
+    "Price Per Unit (Lower)": 150
+  }
+]

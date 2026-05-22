@@ -1,0 +1,128 @@
+[
+  {
+    "Material": "Field Membrane",
+    "Description": "Thermoplastic Polyolefin (TPO) field membrane is a single‑ply roofing material designed to provide durable, energy‑efficient protection for commercial and residential buildings. It is installed across the main roof surface and heat‑welded at the seams to create a continuous, watertight layer. TPO is valued for its bright white reflective surface, which helps reduce cooling costs, and its resistance to UV rays, punctures, and chemical exposure. In short, the field membrane is the primary waterproofing layer that safeguards the entire roof system while offering long‑term performance and reliability.",
+    "Unit of Measurement": "Roll (100 Squares)",
+    "Price Per Unit (Upper)": 715.79,
+    "Price Per Unit (Lower)": 715.79
+  },
+  {
+    "Material": "Flashing Membrane",
+    "Description": "Thermoplastic Polyolefin (TPO) flashing membrane is a flexible sheet used to seal roof details such as walls, curbs, penetrations, and edges where the main field membrane cannot be applied directly. This flexibility allows roofers to easily form it around corners, pipes, and other irregular shapes, ensuring a watertight seal. While the field membrane covers the broad roof surface, flashing membrane is critical for protecting vulnerable transition areas and maintaining the integrity of the entire roofing system.",
+    "Unit of Measurement": "Roll (1 Square)",
+    "Price Per Unit (Upper)": 389.25,
+    "Price Per Unit (Lower)": 389.25
+  },
+  {
+    "Material": "TPO Cleaner",
+    "Description": "TPO membrane cleaner is a specially formulated solution used to prepare and clean thermoplastic polyolefin (TPO) roofing surfaces before welding or applying adhesives. It removes dirt, oils, and contaminants that can interfere with proper bonding, ensuring strong, watertight seams and secure attachment of flashing or accessories. By thoroughly cleaning the membrane, this product helps maintain the integrity of the roof system and extends its service life.",
+    "Unit of Measurement": "5 Gal",
+    "Price Per Unit (Upper)": 118.32,
+    "Price Per Unit (Lower)": 118.32
+  },
+  {
+    "Material": "Insulation (iso)",
+    "Description": "ISO is a rigid foam board placed under the roof membrane to add insulation and energy efficiency. It offers one of the highest R‑values per inch, helping reduce heating and cooling costs while providing a stable surface for the roofing system.",
+    "Unit of Measurement": "Each (32 sq ft)",
+    "Price Per Unit (Upper)": 30.39,
+    "Price Per Unit (Lower)": 30.39
+  },
+  {
+    "Material": "ISO Plates and Screws",
+    "Description": "ISO plates and screws are the fasteners used to secure insulation boards (like ISO) to the roof deck. The plates spread pressure across the board to prevent damage, while the screws anchor everything firmly in place. Together, they keep the insulation stable and ensure the roofing system performs as designed.",
+    "Unit of Measurement": "Box (1000)",
+    "Price Per Unit (Upper)": 614,
+    "Price Per Unit (Lower)": 614
+  },
+  {
+    "Material": "Pitch Pans",
+    "Description": "Pitch pans are small, box‑like enclosures installed around roof penetrations such as pipes or conduits. They are filled with a pourable sealer to create a watertight barrier where standard flashing cannot be used. Pitch pans protect vulnerable spots on the roof by sealing irregular shapes and ensuring water does not enter around penetrations.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 43.03,
+    "Price Per Unit (Lower)": 43.03
+  },
+  {
+    "Material": "Pipe Boot Flashing",
+    "Description": "Pipe boot flashing is a pre‑formed piece of material designed to seal around roof penetrations such as plumbing pipes or vents. It fits snugly over the pipe and ties into the roof membrane, creating a watertight barrier. This prevents leaks at one of the most common vulnerable points on a roof and ensures long‑term protection.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 41.43,
+    "Price Per Unit (Lower)": 41.43
+  },
+  {
+    "Material": "Termination Bar",
+    "Description": "A termination bar is a metal strip used to secure the edge of a roofing membrane to a wall or vertical surface. It provides a clean, tight finish and prevents water from getting behind the membrane. Termination bars are typically fastened with screws and sealed to ensure long‑lasting protection at roof transitions.",
+    "Unit of Measurement": "Each (10 linear feet)",
+    "Price Per Unit (Upper)": 12.29,
+    "Price Per Unit (Lower)": 12.29
+  },
+  {
+    "Material": "Membrane Adhesive",
+    "Description": "Membrane adhesive is the bonding agent used to attach roofing membranes, like TPO, to the insulation or roof deck. It creates a secure, watertight hold without mechanical fasteners, helping ensure the membrane stays in place and performs reliably over time.",
+    "Unit of Measurement": "5 Gal",
+    "Price Per Unit (Upper)": 161.92,
+    "Price Per Unit (Lower)": 161.92
+  },
+  {
+    "Material": "Membrane Plates and Screws",
+    "Description": "Membrane plates and screws are fasteners used to secure the roofing membrane to the roof deck. The plates spread pressure across the membrane to prevent tearing, while the screws hold everything firmly in place. Together, they keep the membrane stable and watertight, especially in areas exposed to wind uplift.",
+    "Unit of Measurement": "Box (1000)",
+    "Price Per Unit (Upper)": 509.94,
+    "Price Per Unit (Lower)": 509.94
+  },
+  {
+    "Material": "Corner Flashing",
+    "Description": "Corner flashing is a pre‑formed piece of membrane used to seal roof corners where two surfaces meet. It provides extra reinforcement at these vulnerable points, ensuring a watertight seal and preventing leaks. Corner flashing helps maintain the durability and integrity of the roofing system.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 12.5,
+    "Price Per Unit (Lower)": 12.5
+  },
+  {
+    "Material": "TPO Primer",
+    "Description": "TPO primer is a liquid applied to roofing surfaces before using adhesives or tapes. It cleans and conditions the membrane, ensuring stronger bonds and watertight seams. Primers are especially important when attaching flashing or accessories to the TPO system.",
+    "Unit of Measurement": "1 Gal",
+    "Price Per Unit (Upper)": 51.22,
+    "Price Per Unit (Lower)": 51.22
+  },
+  {
+    "Material": "Cut-Edge Sealant",
+    "Description": "Cut‑edge sealant is applied to exposed edges of roofing membranes after cutting. It protects the membrane’s reinforcement layer from moisture and weather, preventing fraying or deterioration. This added layer of protection helps extend the life of the roof system.",
+    "Unit of Measurement": "Each (16 oz)",
+    "Price Per Unit (Upper)": 21.59,
+    "Price Per Unit (Lower)": 21.59
+  },
+  {
+    "Material": "Termination Bar Sealant",
+    "Description": "Termination bar sealant is applied along the top edge of a termination bar after it’s fastened. It creates a watertight seal between the roofing membrane and the wall or surface, preventing water from getting behind the bar. This added protection ensures long‑term durability at roof transitions.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 8.69,
+    "Price Per Unit (Lower)": 8.69
+  },
+  {
+    "Material": "Drip Edge",
+    "Description": "A TPO drip edge is a metal edging installed along the perimeter of the roof. It directs water away from the building and protects the roof’s edges from wind uplift and moisture damage. The TPO membrane is heat‑welded to the drip edge, creating a secure, watertight finish.",
+    "Unit of Measurement": "Each (10 linear feet)",
+    "Price Per Unit (Upper)": 17.29,
+    "Price Per Unit (Lower)": 17.29
+  },
+  {
+    "Material": "Drains",
+    "Description": "TPO drains are roof drains designed to integrate with the TPO membrane system. They provide a watertight connection where water exits the roof, preventing leaks at one of the most critical points. The TPO membrane is heat‑welded to the drain flange, ensuring durability and long‑term performance.",
+    "Unit of Measurement": "Each",
+    "Price Per Unit (Upper)": 120.14,
+    "Price Per Unit (Lower)": 120.14
+  },
+  {
+    "Material": "Walk Pads",
+    "Description": "Walkway pads are protective sections installed on top of the roof membrane in high‑traffic areas. They provide a safe, slip‑resistant surface for foot traffic and protect the membrane from damage during maintenance or inspections. This helps extend the life of the roof while keeping service personnel safe.",
+    "Unit of Measurement": "Each (150 sq ft)",
+    "Price Per Unit (Upper)": 676.75,
+    "Price Per Unit (Lower)": 676.75
+  },
+  {
+    "Material": "Labor",
+    "Description": "Labor refers to the skilled work performed by roofing crews during installation or repair. It includes tasks such as preparing the roof deck, installing insulation, fastening membranes, and sealing details. Quality labor ensures the roofing system is installed correctly, watertight, and built to last.",
+    "Unit of Measurement": "Per Square",
+    "Price Per Unit (Upper)": 200,
+    "Price Per Unit (Lower)": 150
+  }
+]

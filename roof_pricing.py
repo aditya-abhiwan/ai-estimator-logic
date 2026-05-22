@@ -9,6 +9,8 @@ from typing import Any
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 
+from roof_type_calculators import estimate_component_quantity
+
 
 PRICING_WORKBOOK = Path(
     "Component Metrics AI Replacement Calculator Per Roof Material Type.xlsx"
@@ -84,6 +86,7 @@ class EstimateResult:
     complexity_multiplier: float
     final_price: float
     line_items: list[EstimateLine]
+    calculation_log: list[str]
 
     @property
     def lines(self) -> list[EstimateLine]:
@@ -105,6 +108,7 @@ class EstimateResult:
             "is_residential_property": self.is_residential_property,
             "complexity_multiplier": self.complexity_multiplier,
             "final_price": self.final_price,
+            "calculation_log": self.calculation_log,
             "line_items": [
                 {
                     "material": item.material,
@@ -181,33 +185,47 @@ def calculate_quantities(
     components: list[ComponentPrice],
     roof_area_sqft: float,
     waste_factor: float,
-    quantity_overrides: dict[str, float] | None = None,
+    plan_area_sqft: float | None = None,
+    facet_count: int = 1,
 ) -> dict[str, float]:
-    """Step 2: calculate quantities from area coverage or explicit overrides."""
+    """Step 2: calculate quantities from roof area and component rules."""
     _validate_positive(roof_area_sqft, "roof_area_sqft")
     _validate_non_negative(waste_factor, "waste_factor")
-    overrides = {_key(k): v for k, v in (quantity_overrides or {}).items()}
     quantities: dict[str, float] = {}
-    missing: list[str] = []
+
+    _custom_calculator_materials = {
+        "ice and water underlayment",
+        "decking",
+        "field tiles",
+        "rake trim",
+        "eave trim",
+        "foam insulation",
+        "z bar",
+        "valley tray",
+        "2x2 board",
+        "1x2 batten",
+        "granules",
+    }
 
     for component in components:
-        material_key = _key(component.material)
-        if material_key in overrides:
-            quantity = overrides[material_key]
-            _validate_non_negative(quantity, f"quantity_overrides[{component.material}]")
-            quantities[component.material] = quantity
-            continue
-        if component.coverage_sqft is None:
-            missing.append(component.material)
+        use_custom = (
+            component.coverage_sqft is None
+            or component.material.strip().lower() in _custom_calculator_materials
+        )
+        if use_custom:
+            quantities[component.material] = estimate_component_quantity(
+                component,
+                roof_area_sqft,
+                waste_factor,
+                plan_area_sqft=plan_area_sqft,
+                facet_count=facet_count,
+            )
             continue
         _validate_positive(component.coverage_sqft, f"coverage_sqft[{component.material}]")
         quantities[component.material] = (
             roof_area_sqft / component.coverage_sqft
         ) * (1 + waste_factor)
 
-    if missing:
-        names = ", ".join(repr(name) for name in missing)
-        raise ValueError(f"Missing coverage for {names}; provide quantity overrides.")
     return quantities
 
 
@@ -332,7 +350,6 @@ def estimate_from_quantities(
     price_level: str = "low",
     margin: float = FIXED_MARGIN,
     prices_path: str | Path = PRICING_WORKBOOK,
-    labor_cost: float = 0,
     tax_rate: float = 0,
     roof_area_sqft: float | None = None,
     is_residential_property: bool = True,
@@ -348,8 +365,8 @@ def estimate_from_quantities(
         pricing_mode,
         price_level,
     )
-    # Auto-calculate labor from Excel if roof_area_sqft given and labor_cost not manually set
-    if labor_cost == 0 and roof_area_sqft is not None:
+    labor_cost = 0.0
+    if roof_area_sqft is not None:
         labor_component = next(
             (c for c in components.values() if is_labor_component(c)), None
         )
@@ -362,6 +379,28 @@ def estimate_from_quantities(
         tax_rate,
         margin,
         is_residential_property,
+    )
+    calculation_log = _build_calculation_log(
+        roof_type=roof_type,
+        pricing_mode=pricing_mode,
+        price_level=None if pricing_mode == "insurance" else price_level,
+        plan_area_sqft=None,
+        pitch=None,
+        slope_factor=None,
+        roof_area_sqft=roof_area_sqft,
+        waste_factor=None,
+        line_items=lines,
+        material_cost=totals["material_cost"],
+        labor_rate=None,
+        labor_cost=totals["labor_cost"],
+        complexity=1,
+        tax_rate_requested=tax_rate,
+        tax_rate_applied=totals["tax_rate"],
+        tax_amount=totals["tax_amount"],
+        is_residential_property=totals["is_residential_property"],
+        base_cost=totals["base_cost"],
+        final_price=totals["final_price"],
+        quantity_mode="explicit",
     )
     return EstimateResult(
         roof_type=roof_type,
@@ -379,6 +418,7 @@ def estimate_from_quantities(
         complexity_multiplier=1,
         final_price=totals["final_price"],
         line_items=lines,
+        calculation_log=calculation_log,
     )
 
 
@@ -387,7 +427,6 @@ def estimate_retail_range_from_quantities(
     quantities: dict[str, float],
     margin: float = FIXED_MARGIN,
     prices_path: str | Path = PRICING_WORKBOOK,
-    labor_cost: float = 0,
     tax_rate: float = 0,
     roof_area_sqft: float | None = None,
     is_residential_property: bool = True,
@@ -400,7 +439,6 @@ def estimate_retail_range_from_quantities(
         price_level="low",
         margin=margin,
         prices_path=prices_path,
-        labor_cost=labor_cost,
         tax_rate=tax_rate,
         roof_area_sqft=roof_area_sqft,
         is_residential_property=is_residential_property,
@@ -412,7 +450,6 @@ def estimate_retail_range_from_quantities(
         price_level="high",
         margin=margin,
         prices_path=prices_path,
-        labor_cost=labor_cost,
         tax_rate=tax_rate,
         roof_area_sqft=roof_area_sqft,
         is_residential_property=is_residential_property,
@@ -428,7 +465,6 @@ def estimate_from_roof_area(
     price_level: str = "low",
     waste_factor: float = 0.1,
     margin: float = FIXED_MARGIN,
-    quantity_overrides: dict[str, float] | None = None,
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_rate: float = 0,
     facet_count: int = 1,
@@ -450,7 +486,8 @@ def estimate_from_roof_area(
         component_list,
         roof_area,
         waste_factor,
-        quantity_overrides,
+        plan_area_sqft=plan_area_sqft,
+        facet_count=facet_count,
     )
     material_cost, lines = calculate_material_cost(
         component_list,
@@ -474,6 +511,28 @@ def estimate_from_roof_area(
         margin,
         is_residential_property,
     )
+    calculation_log = _build_calculation_log(
+        roof_type=roof_type,
+        pricing_mode=pricing_mode,
+        price_level=None if pricing_mode == "insurance" else price_level,
+        plan_area_sqft=plan_area_sqft,
+        pitch=pitch,
+        slope_factor=slope_factor,
+        roof_area_sqft=roof_area,
+        waste_factor=waste_factor,
+        line_items=lines,
+        material_cost=totals["material_cost"],
+        labor_rate=effective_labor_rate,
+        labor_cost=totals["labor_cost"],
+        complexity=complexity,
+        tax_rate_requested=tax_rate,
+        tax_rate_applied=totals["tax_rate"],
+        tax_amount=totals["tax_amount"],
+        is_residential_property=totals["is_residential_property"],
+        base_cost=totals["base_cost"],
+        final_price=totals["final_price"],
+        quantity_mode="roof_area",
+    )
     return EstimateResult(
         roof_type=roof_type,
         pricing_mode=pricing_mode,
@@ -490,6 +549,7 @@ def estimate_from_roof_area(
         complexity_multiplier=complexity,
         final_price=totals["final_price"],
         line_items=lines,
+        calculation_log=calculation_log,
     )
 
 
@@ -499,7 +559,6 @@ def estimate_retail_range_from_roof_area(
     pitch: str | float | int,
     waste_factor: float = 0.1,
     margin: float = FIXED_MARGIN,
-    quantity_overrides: dict[str, float] | None = None,
     prices_path: str | Path = PRICING_WORKBOOK,
     labor_rate: float = 0,
     facet_count: int = 1,
@@ -515,7 +574,6 @@ def estimate_retail_range_from_roof_area(
         "pricing_mode": "retail",
         "waste_factor": waste_factor,
         "margin": margin,
-        "quantity_overrides": quantity_overrides,
         "prices_path": prices_path,
         "labor_rate": labor_rate,
         "facet_count": facet_count,
@@ -666,6 +724,99 @@ def is_labor_component(component: ComponentPrice) -> bool:
     return material in {"labor", "labour"}
 
 
+def _build_calculation_log(
+    roof_type: str,
+    pricing_mode: str,
+    price_level: str | None,
+    plan_area_sqft: float | None,
+    pitch: str | float | int | None,
+    slope_factor: float | None,
+    roof_area_sqft: float | None,
+    waste_factor: float | None,
+    line_items: list[EstimateLine],
+    material_cost: float,
+    labor_rate: float | None,
+    labor_cost: float,
+    complexity: float,
+    tax_rate_requested: float,
+    tax_rate_applied: float,
+    tax_amount: float,
+    is_residential_property: bool,
+    base_cost: float,
+    final_price: float,
+    quantity_mode: str,
+) -> list[str]:
+    log = [
+        "CALCULATION LOG",
+        f"Roof type: {roof_type}",
+        f"Pricing mode: {pricing_mode}",
+    ]
+    if price_level:
+        log.append(f"Retail price level: {price_level}")
+    log.append(f"Property type: {'Residential' if is_residential_property else 'Non-residential'}")
+
+    if plan_area_sqft is not None and roof_area_sqft is not None and slope_factor is not None:
+        log.extend(
+            [
+                "",
+                "1. Geometry",
+                f"Plan area = {plan_area_sqft:.4f} sq ft",
+                f"Pitch = {pitch}",
+                f"Slope factor = sqrt(1 + pitch_ratio^2) = {slope_factor:.6f}",
+                (
+                    "Roof area = plan area * slope factor = "
+                    f"{plan_area_sqft:.4f} * {slope_factor:.6f} = {roof_area_sqft:.4f} sq ft"
+                ),
+            ]
+        )
+
+    log.extend(["", "2. Quantities And Line Costs"])
+    if quantity_mode == "roof_area" and waste_factor is not None:
+        log.append(f"Waste factor = {waste_factor:.2%}")
+    elif quantity_mode == "explicit":
+        log.append("Quantities were provided directly.")
+
+    for line in line_items:
+        source = "explicit" if quantity_mode == "explicit" else "calculated"
+        log.append(
+            f"- {line.material}: quantity {line.quantity:.4f} ({source}) * "
+            f"unit price ${line.unit_price:.2f} = ${line.line_cost:.2f}"
+        )
+
+    after_margin = base_cost * (1 + FIXED_MARGIN)
+    log.extend(
+        [
+            "",
+            "3. Material Total",
+            f"Material cost = sum(line costs) = ${material_cost:.2f}",
+            "",
+            "4. Labor",
+            f"Complexity multiplier = {complexity:.6f}",
+        ]
+    )
+    if labor_rate is not None and roof_area_sqft is not None:
+        log.append(
+            f"Labor cost = labor rate ${labor_rate:.4f}/sq ft * "
+            f"roof area {roof_area_sqft:.4f} * complexity {complexity:.6f} = ${labor_cost:.2f}"
+        )
+    else:
+        log.append(f"Labor cost = ${labor_cost:.2f}")
+
+    log.extend(
+        [
+            "",
+            "5. Margin And Tax",
+            f"Base cost = material cost + labor cost = ${base_cost:.2f}",
+            f"After fixed 33% margin = ${base_cost:.2f} * 1.33 = ${after_margin:.2f}",
+            f"Requested tax rate = {tax_rate_requested:.2%}",
+            f"Applied tax rate = {tax_rate_applied:.2%}",
+            f"Tax amount = ${after_margin:.2f} * {tax_rate_applied:.2%} = ${tax_amount:.2f}",
+            f"Final price = ${after_margin:.2f} + ${tax_amount:.2f} = ${final_price:.2f}",
+        ]
+    )
+    return log
+
+
 def print_estimate(result: EstimateResult) -> None:
     if result.plan_area_sqft is not None:
         print(f"Roof type: {result.roof_type}")
@@ -691,6 +842,10 @@ def print_estimate(result: EstimateResult) -> None:
     print(f"Complexity multiplier: {result.complexity_multiplier:.4f}")
     print(f"Base cost: ${result.base_cost:.2f}")
     print(f"Final price with 33% margin: ${result.final_price:.2f}")
+    print("")
+    print("Calculation log:")
+    for entry in result.calculation_log:
+        print(entry)
 
 
 def print_estimate_range(result: EstimateRangeResult) -> None:
@@ -707,22 +862,6 @@ def print_estimate_range(result: EstimateRangeResult) -> None:
         "Retail final price range: "
         f"${result.lower.final_price:.2f} - ${result.upper.final_price:.2f}"
     )
-
-
-def parse_quantity_overrides(values: list[str]) -> dict[str, float]:
-    overrides: dict[str, float] = {}
-    for value in values:
-        if "=" not in value:
-            raise ValueError(
-                "Quantity overrides must use MATERIAL=QUANTITY, "
-                "for example: 'Drip Edge=20'"
-            )
-        material, quantity = value.split("=", 1)
-        material = material.strip()
-        if not material:
-            raise ValueError("Quantity override material cannot be blank.")
-        overrides[material] = float(quantity)
-    return overrides
 
 
 def _load_shared_strings(archive: ZipFile) -> list[str]:
@@ -920,13 +1059,6 @@ def main() -> None:
         help="Tax percentage, for example 8.25 for 8.25%%. Applies only to residential.",
     )
     parser.add_argument("--complexity-alpha", type=float, default=0.02)
-    parser.add_argument(
-        "--quantity-override",
-        action="append",
-        default=[],
-        metavar="MATERIAL=QUANTITY",
-        help="Provide non-area component quantities. Repeat this option as needed.",
-    )
     args = parser.parse_args()
 
     estimate_args = {
@@ -934,7 +1066,6 @@ def main() -> None:
         "plan_area_sqft": args.plan_area,
         "pitch": args.pitch,
         "waste_factor": args.waste_factor,
-        "quantity_overrides": parse_quantity_overrides(args.quantity_override),
         "labor_rate": args.labor_rate,
         "facet_count": args.facet_count,
         "tax_rate": args.tax_percent / 100,
