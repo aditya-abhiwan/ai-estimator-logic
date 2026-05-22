@@ -19,7 +19,8 @@ def _linear_quantity_for_unit(unit: str, linear_feet: float, default_lf_per_unit
 
 def hip_and_ridge_shingles(component: Any, context: QuantityContext) -> float:
     # 15 bundles @ 33 lf = 495 lf for 2000 sqft, 12 facets → ridge_lf = facet_count * roof_width * 0.9
-    return _linear_quantity_for_unit(component.unit, context.ridge_lf, 33)
+    hip_ridge_lf = context.roof_width * (1 + context.facet_count * 0.25)
+    return _linear_quantity_for_unit(component.unit, hip_ridge_lf, 33)
 
 
 def drip_edge(component: Any, context: QuantityContext) -> float:
@@ -36,7 +37,7 @@ def valley_metal(component: Any, context: QuantityContext) -> float:
 
 def step_flashing(component: Any, context: QuantityContext) -> float:
     # 1 bundle for 2000 sqft, 12 facets
-    return max(1, math.ceil(context.facet_count / 10))
+    return max(1, math.ceil(context.facet_count / 15))
 
 
 def ice_and_water_underlayment(component: Any, context: QuantityContext) -> float:
@@ -52,7 +53,7 @@ def pipe_boot_flashing(component: Any, context: QuantityContext) -> float:
 
 def versa_caps(component: Any, context: QuantityContext) -> float:
     # 4-6 for 2000 sqft → use midpoint ~5
-    return max(1, math.ceil(context.plan_area_sqft / 400))
+    return max(1, math.ceil(context.plan_area_sqft / 650))
 
 
 def attic_ventilation(component: Any, context: QuantityContext) -> float:
@@ -67,7 +68,7 @@ def cap_nails(component: Any, context: QuantityContext) -> float:
 
 def roofing_nails(component: Any, context: QuantityContext) -> float:
     # 2 boxes for 2000 sqft
-    return max(1, math.ceil(context.plan_area_sqft / 1000))
+    return max(1, math.ceil(context.plan_area_sqft / 2500))
 
 
 def caulking(component: Any, context: QuantityContext) -> float:
@@ -109,4 +110,3 @@ CALCULATORS = {
 
 def calculate_quantity(component: Any, context: QuantityContext) -> float:
     return CALCULATORS.get(_material_key(component), default_quantity)(component, context)
-

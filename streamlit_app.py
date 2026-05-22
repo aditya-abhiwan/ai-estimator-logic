@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import io
 import json
 
 import streamlit as st
+from fpdf import FPDF
 
 import roof_pricing as pricing
 
@@ -164,31 +166,34 @@ def main() -> None:
 
     calculate = st.button("Calculate Estimate", type="primary", width="stretch")
 
-    if not calculate:
+    if calculate:
+        try:
+            estimate_args = {
+                "roof_type": roof_type,
+                "plan_area_sqft": plan_area,
+                "pitch": pitch,
+                "waste_factor": waste_factor_percent / 100,
+                "facet_count": int(facet_count),
+                "tax_rate": tax_percent / 100,
+                "is_residential_property": property_type == "residential",
+                "complexity_alpha": complexity_alpha_percent / 100,
+            }
+            if pricing_mode == "retail":
+                st.session_state["result"] = pricing.estimate_retail_range_from_roof_area(**estimate_args)
+            else:
+                st.session_state["result"] = pricing.estimate_from_roof_area(
+                    pricing_mode="insurance",
+                    price_level="high",
+                    **estimate_args,
+                )
+        except Exception as exc:
+            st.error(str(exc))
+            return
+
+    if "result" not in st.session_state:
         return
 
-    try:
-        estimate_args = {
-            "roof_type": roof_type,
-            "plan_area_sqft": plan_area,
-            "pitch": pitch,
-            "waste_factor": waste_factor_percent / 100,
-            "facet_count": int(facet_count),
-            "tax_rate": tax_percent / 100,
-            "is_residential_property": property_type == "residential",
-            "complexity_alpha": complexity_alpha_percent / 100,
-        }
-        if pricing_mode == "retail":
-            result = pricing.estimate_retail_range_from_roof_area(**estimate_args)
-        else:
-            result = pricing.estimate_from_roof_area(
-                pricing_mode="insurance",
-                price_level="high",
-                **estimate_args,
-            )
-    except Exception as exc:
-        st.error(str(exc))
-        return
+    result = st.session_state["result"]
 
     st.subheader("Estimate Summary")
     if isinstance(result, pricing.EstimateRangeResult):
@@ -222,6 +227,21 @@ def main() -> None:
     detail_metrics[2].metric("Complexity", f"{detail_source.complexity_multiplier:.4f}")
     detail_metrics[3].metric("Tax Amount", money(detail_source.tax_amount))
 
+    effective_tax_rate = detail_source.tax_rate
+    st.download_button(
+        label="⬇ Download Report (PDF)",
+        data=generate_pdf_report(
+            result, detail_source, effective_tax_rate,
+            plan_area=plan_area, pitch=pitch,
+            facet_count=int(facet_count),
+            waste_factor_percent=waste_factor_percent,
+            roof_type=roof_type,
+        ),
+        file_name=f"roof_estimate_{roof_type.replace(' ', '_')}_{int(plan_area)}sqft.pdf",
+        mime="application/pdf",
+        use_container_width=True,
+    )
+
     st.subheader("Line Items")
     if isinstance(result, pricing.EstimateRangeResult):
         st.dataframe(range_line_rows(result), width="stretch", hide_index=True)
@@ -229,7 +249,6 @@ def main() -> None:
         st.dataframe(line_rows(result), width="stretch", hide_index=True)
 
     st.subheader("Formula Check")
-    effective_tax_rate = detail_source.tax_rate
     if isinstance(result, pricing.EstimateRangeResult):
         st.code(
             (
@@ -321,6 +340,140 @@ def main() -> None:
 
     with st.expander("Raw result JSON"):
         st.json(json.dumps(result.to_dict(), indent=2))
+
+
+def generate_pdf_report(
+    result: pricing.EstimateRangeResult | pricing.EstimateResult,
+    detail_source: pricing.EstimateResult,
+    effective_tax_rate: float,
+    plan_area: float = 0,
+    pitch: str = "",
+    facet_count: int = 1,
+    waste_factor_percent: float = 0,
+    roof_type: str = "",
+) -> bytes:
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 10, "FPR Roof Pricing Estimate Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+
+    # ── Job Inputs ───────────────────────────────────────────────────────────
+    _section(pdf, "Job Inputs")
+    _kv_table(pdf, [
+        ("Roof Type",          roof_type),
+        ("Plan Area (sq ft)",  f"{plan_area:,.2f}"),
+        ("Pitch",              pitch),
+        ("Facet Count",        str(facet_count)),
+        ("Waste Factor",       f"{waste_factor_percent:.1f}%"),
+    ])
+
+    # ── 1. Estimate Summary ──────────────────────────────────────────────────
+    _section(pdf, "1. Estimate Summary")
+    if isinstance(result, pricing.EstimateRangeResult):
+        rows = [
+            ("Final Price Range", f"{money(result.lower.final_price)} - {money(result.upper.final_price)}"),
+            ("Base Cost Range",   f"{money(result.lower.base_cost)}  - {money(result.upper.base_cost)}"),
+            ("Material Cost Range", f"{money(result.lower.material_cost)} - {money(result.upper.material_cost)}"),
+            ("Labor Cost",        money(result.lower.labor_cost)),
+        ]
+    else:
+        rows = [
+            ("Final Price",    money(result.final_price)),
+            ("Base Cost",      money(result.base_cost)),
+            ("Material Cost",  money(result.material_cost)),
+            ("Labor Cost",     money(result.labor_cost)),
+        ]
+    rows += [
+        ("Roof Area",          f"{detail_source.roof_area_sqft:,.2f} sq ft"),
+        ("Slope Factor",       f"{detail_source.slope_factor:.4f}"),
+        ("Complexity",         f"{detail_source.complexity_multiplier:.4f}"),
+        ("Tax Amount",         money(detail_source.tax_amount)),
+    ]
+    _kv_table(pdf, rows)
+
+    # ── 2. Line Items ────────────────────────────────────────────────────────
+    _section(pdf, "2. Line Items")
+    if isinstance(result, pricing.EstimateRangeResult):
+        headers = ["Material", "Unit", "Qty", "Unit Price Range", "Line Cost Range"]
+        data = [
+            [r["Material"], r["Unit"], str(r["Quantity"]), r["Unit Price Range"], r["Line Cost Range"]]
+            for r in range_line_rows(result)
+        ]
+    else:
+        headers = ["Material", "Unit", "Qty", "Unit Price", "Line Cost"]
+        data = [
+            [r["Material"], r["Unit"], str(r["Quantity"]), r["Unit Price"], r["Line Cost"]]
+            for r in line_rows(result)
+        ]
+    _table(pdf, headers, data)
+
+    # ── 3. Formula Check ─────────────────────────────────────────────────────
+    _section(pdf, "3. Formula Check")
+    if isinstance(result, pricing.EstimateRangeResult):
+        formula = (
+            f"Lower: ({money(result.lower.material_cost)} + {money(result.lower.labor_cost)})"
+            f" * 1.33 * (1 + {effective_tax_rate:.2%}) = {money(result.lower.final_price)}\n"
+            f"Upper: ({money(result.upper.material_cost)} + {money(result.upper.labor_cost)})"
+            f" * 1.33 * (1 + {effective_tax_rate:.2%}) = {money(result.upper.final_price)}"
+        )
+    else:
+        formula = (
+            f"({money(result.material_cost)} + {money(result.labor_cost)})"
+            f" * 1.33 * (1 + {effective_tax_rate:.2%}) = {money(result.final_price)}"
+        )
+    pdf.set_font("Courier", size=9)
+    pdf.multi_cell(0, 6, formula)
+    pdf.ln(2)
+
+    # ── 4. Calculation Logs ──────────────────────────────────────────────────
+    _section(pdf, "4. Calculation Logs")
+    pdf.set_font("Courier", size=8)
+    if isinstance(result, pricing.EstimateRangeResult):
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(0, 6, "Retail Low:", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Courier", size=8)
+        pdf.multi_cell(0, 5, "\n".join(result.lower.calculation_log))
+        pdf.ln(3)
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(0, 6, "Retail High:", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Courier", size=8)
+        pdf.multi_cell(0, 5, "\n".join(result.upper.calculation_log))
+    else:
+        pdf.multi_cell(0, 5, "\n".join(result.calculation_log))
+
+    buf = io.BytesIO()
+    buf.write(pdf.output())
+    return buf.getvalue()
+
+
+def _section(pdf: FPDF, title: str) -> None:
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, title, new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+
+
+def _kv_table(pdf: FPDF, rows: list[tuple[str, str]]) -> None:
+    pdf.set_font("Helvetica", size=9)
+    for label, value in rows:
+        pdf.cell(70, 6, label, border=1)
+        pdf.cell(0, 6, value, border=1, new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+
+
+def _table(pdf: FPDF, headers: list[str], rows: list[list[str]]) -> None:
+    col_w = pdf.epw / len(headers)
+    pdf.set_font("Helvetica", "B", 8)
+    for h in headers:
+        pdf.cell(col_w, 6, h, border=1)
+    pdf.ln()
+    pdf.set_font("Helvetica", size=8)
+    for row in rows:
+        for cell in row:
+            pdf.cell(col_w, 6, str(cell), border=1)
+        pdf.ln()
+    pdf.ln(4)
 
 
 if __name__ == "__main__":

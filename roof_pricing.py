@@ -197,6 +197,7 @@ def calculate_quantities(
         "ice and water underlayment",
         "decking",
         "field tiles",
+        "hip and ridge",
         "rake trim",
         "eave trim",
         "foam insulation",
@@ -205,6 +206,12 @@ def calculate_quantities(
         "2x2 board",
         "1x2 batten",
         "granules",
+        "insulation (iso)",
+        "flashing membrane",
+        "walk pads",
+        "modified cap sheet",
+        "base sheet",
+        "modified flashing roll",
     }
 
     for component in components:
