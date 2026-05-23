@@ -231,13 +231,23 @@ class RoofPricingModelTests(unittest.TestCase):
         }
         self.assertAlmostEqual(
             lower_quantities["Material and Labor"],
-            (pricing.calculate_roof_area(2000, "6:12") / 100) * 1.1,
+            math.ceil((pricing.calculate_roof_area(2000, "6:12") / 100) * 1.1),
         )
         self.assertAlmostEqual(
             lower_quantities["Tear Off"],
-            pricing.calculate_roof_area(2000, "6:12") / 100,
+            math.ceil(pricing.calculate_roof_area(2000, "6:12") / 100),
         )
         self.assertEqual(lower_quantities["Decking"], 4)
+
+    def test_modified_iso_price_prefers_dollar_amount_over_thickness(self):
+        prices = pricing.load_component_prices()
+        modified = {
+            component.material: component
+            for component in prices["Modified"]
+        }
+
+        self.assertEqual(modified["Insulation (ISO)"].price.lower, 17.39)
+        self.assertEqual(modified["Insulation (ISO)"].price.upper, 29.76)
 
 
 if __name__ == "__main__":

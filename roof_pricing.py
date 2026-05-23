@@ -220,18 +220,19 @@ def calculate_quantities(
             or component.material.strip().lower() in _custom_calculator_materials
         )
         if use_custom:
-            quantities[component.material] = estimate_component_quantity(
+            quantities[component.material] = math.ceil(estimate_component_quantity(
                 component,
                 roof_area_sqft,
                 waste_factor,
                 plan_area_sqft=plan_area_sqft,
                 facet_count=facet_count,
-            )
+            ))
             continue
         _validate_positive(component.coverage_sqft, f"coverage_sqft[{component.material}]")
-        quantities[component.material] = (
+        quantities[component.material] = math.ceil(
             roof_area_sqft / component.coverage_sqft
-        ) * (1 + waste_factor)
+            * (1 + waste_factor)
+        )
 
     return quantities
 
@@ -959,7 +960,11 @@ def _parse_price(value: Any) -> float | None:
         return float(value)
     if value is None or str(value).strip() == "":
         return None
-    match = re.search(r"\d+(?:,\d{3})*(?:\.\d+)?", str(value).replace("$", ""))
+    text = str(value)
+    dollar_match = re.search(r"\$\s*(\d+(?:,\d{3})*(?:\.\d+)?)", text)
+    if dollar_match:
+        return float(dollar_match.group(1).replace(",", ""))
+    match = re.search(r"\d+(?:,\d{3})*(?:\.\d+)?", text)
     if not match:
         return None
     return float(match.group(0).replace(",", ""))
