@@ -7,6 +7,33 @@ import roof_pricing as pricing
 
 
 class RoofPricingModelTests(unittest.TestCase):
+    def roofscope_payload(self):
+        return {
+            "TotalRoofArea": "33.28",
+            "TotalPerimeter": "285.99",
+            "IWB": "1179.00",
+            "Eave": "196.50",
+            "RakeEdge": "42.49",
+            "FlatDripEdge": "47.00",
+            "Ridge": "40.75",
+            "Hip": "124.50",
+            "Valley": "39.00",
+            "StepFlashing": "7.27",
+            "HeadwallFlashing": "31.00",
+            "Planes": 9,
+            "Buildings": [
+                {
+                    "Name": "Structure 1",
+                    "Structure": 1,
+                    "Areas": [
+                        {"Name": "A", "Area": 751, "Pitch": "6:12", "IWB": "321"},
+                        {"Name": "B", "Area": 163, "Pitch": "6:12", "IWB": "60"},
+                        {"Name": "I", "Area": 276, "Pitch": "1:12", "IWB": "0"},
+                    ],
+                }
+            ],
+        }
+
     def test_roof_area_uses_pitch_slope_factor(self):
         self.assertAlmostEqual(
             pricing.slope_factor_from_pitch("6:12"),
@@ -248,6 +275,63 @@ class RoofPricingModelTests(unittest.TestCase):
 
         self.assertEqual(modified["Insulation (ISO)"].price.lower, 17.39)
         self.assertEqual(modified["Insulation (ISO)"].price.upper, 29.76)
+
+    def test_roofscope_payload_uses_calculated_roof_area_directly(self):
+        inputs = pricing.roof_model_inputs_from_roofscope(self.roofscope_payload())
+
+        self.assertEqual(inputs.roof_area_squares, 33.28)
+        self.assertEqual(inputs.facet_count, 9)
+
+    def test_roofscope_adapter_ignores_non_model_linear_measurements(self):
+        payload = self.roofscope_payload()
+        changed = self.roofscope_payload()
+        changed.update(
+            {
+                "TotalPerimeter": "9999",
+                "IWB": "9999",
+                "Eave": "9999",
+                "RakeEdge": "9999",
+                "FlatDripEdge": "9999",
+                "Ridge": "9999",
+                "Hip": "9999",
+                "Valley": "9999",
+                "StepFlashing": "9999",
+                "HeadwallFlashing": "9999",
+            }
+        )
+
+        original_inputs = pricing.roof_model_inputs_from_roofscope(payload)
+        changed_inputs = pricing.roof_model_inputs_from_roofscope(changed)
+
+        self.assertEqual(original_inputs, changed_inputs)
+
+    def test_roofscope_estimate_uses_existing_roof_area_engine(self):
+        inputs = pricing.roof_model_inputs_from_roofscope(self.roofscope_payload())
+        result = pricing.estimate_from_roofscope_model_inputs(
+            self.roofscope_payload(),
+            roof_type="Shingle (Class 3)",
+            pricing_mode="retail",
+            price_level="low",
+            waste_factor=0.1,
+        )
+
+        quantities = {line.material: line.quantity for line in result.line_items}
+        self.assertAlmostEqual(result.plan_area_sqft, inputs.roof_area_squares)
+        self.assertAlmostEqual(result.roof_area_sqft, 3328)
+        self.assertEqual(result.complexity_multiplier, 1.16)
+        self.assertEqual(quantities["Field Shingles"], 37)
+        self.assertEqual(quantities["Synthetic Felt"], 4)
+        self.assertAlmostEqual(result.labor_cost, 65 * 33.28 * 1.16)
+
+    def test_roofscope_retail_range_uses_lower_and_upper_prices(self):
+        result = pricing.estimate_retail_range_from_roofscope_model_inputs(
+            self.roofscope_payload(),
+            roof_type="Shingle (Class 3)",
+            waste_factor=0.1,
+        )
+
+        self.assertLess(result.lower.final_price, result.upper.final_price)
+        self.assertAlmostEqual(result.lower.roof_area_sqft, result.upper.roof_area_sqft)
 
 
 if __name__ == "__main__":

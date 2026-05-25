@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 import argparse
 import math
 import re
@@ -58,6 +59,12 @@ class ComponentWeightage:
     percentage_of_cost: float | None
     longevity_necessity: str
     roof_health_importance: str
+
+
+@dataclass(frozen=True)
+class RoofModelInputs:
+    roof_area_squares: float
+    facet_count: int
 
 
 @dataclass(frozen=True)
@@ -231,6 +238,63 @@ def calculate_quantities(
         _validate_positive(component.coverage_sqft, f"coverage_sqft[{component.material}]")
         quantities[component.material] = math.ceil(
             roof_area_sqft / component.coverage_sqft
+            * (1 + waste_factor)
+        )
+
+    return quantities
+
+
+def calculate_quantities_from_roof_squares(
+    components: list[ComponentPrice],
+    roof_area_squares: float,
+    waste_factor: float,
+    facet_count: int = 1,
+) -> dict[str, float]:
+    """Calculate RoofScope quantities with area values kept in squares."""
+    _validate_positive(roof_area_squares, "roof_area_squares")
+    _validate_non_negative(waste_factor, "waste_factor")
+    quantities: dict[str, float] = {}
+    roof_area_sqft = roof_area_squares * 100
+
+    _custom_calculator_materials = {
+        "ice and water underlayment",
+        "decking",
+        "field tiles",
+        "hip and ridge",
+        "rake trim",
+        "eave trim",
+        "foam insulation",
+        "z bar",
+        "valley tray",
+        "2x2 board",
+        "1x2 batten",
+        "granules",
+        "insulation (iso)",
+        "flashing membrane",
+        "walk pads",
+        "modified cap sheet",
+        "base sheet",
+        "modified flashing roll",
+    }
+
+    for component in components:
+        use_custom = (
+            component.coverage_sqft is None
+            or component.material.strip().lower() in _custom_calculator_materials
+        )
+        if use_custom:
+            quantities[component.material] = math.ceil(estimate_component_quantity(
+                component,
+                roof_area_sqft,
+                waste_factor,
+                plan_area_sqft=roof_area_sqft,
+                facet_count=facet_count,
+            ))
+            continue
+        _validate_positive(component.coverage_sqft, f"coverage_sqft[{component.material}]")
+        coverage_squares = component.coverage_sqft / 100
+        quantities[component.material] = math.ceil(
+            roof_area_squares / coverage_squares
             * (1 + waste_factor)
         )
 
@@ -592,6 +656,235 @@ def estimate_retail_range_from_roof_area(
     lower = estimate_from_roof_area(price_level="low", **common_args)
     upper = estimate_from_roof_area(price_level="high", **common_args)
     return EstimateRangeResult(lower=lower, upper=upper)
+
+
+def estimate_from_roofscope_model_inputs(
+    payload: dict[str, Any],
+    roof_type: str,
+    pricing_mode: str,
+    price_level: str = "low",
+    waste_factor: float = 0.1,
+    margin: float = FIXED_MARGIN,
+    prices_path: str | Path = PRICING_WORKBOOK,
+    labor_rate: float = 0,
+    tax_rate: float = 0,
+    is_residential_property: bool = True,
+    complexity_alpha: float = 0.02,
+) -> EstimateResult:
+    """Estimate from RoofScope data using only documented model inputs."""
+    inputs = roof_model_inputs_from_roofscope(payload)
+    return estimate_from_roof_squares(
+        roof_type=roof_type,
+        roof_area_squares=inputs.roof_area_squares,
+        pricing_mode=pricing_mode,
+        price_level=price_level,
+        waste_factor=waste_factor,
+        margin=margin,
+        prices_path=prices_path,
+        labor_rate=labor_rate,
+        facet_count=inputs.facet_count,
+        tax_rate=tax_rate,
+        is_residential_property=is_residential_property,
+        complexity_alpha=complexity_alpha,
+    )
+
+
+def estimate_retail_range_from_roofscope_model_inputs(
+    payload: dict[str, Any],
+    roof_type: str,
+    waste_factor: float = 0.1,
+    margin: float = FIXED_MARGIN,
+    prices_path: str | Path = PRICING_WORKBOOK,
+    labor_rate: float = 0,
+    tax_rate: float = 0,
+    is_residential_property: bool = True,
+    complexity_alpha: float = 0.02,
+) -> EstimateRangeResult:
+    """Retail range from RoofScope data using only documented model inputs."""
+    inputs = roof_model_inputs_from_roofscope(payload)
+    return estimate_retail_range_from_roof_squares(
+        roof_type=roof_type,
+        roof_area_squares=inputs.roof_area_squares,
+        waste_factor=waste_factor,
+        margin=margin,
+        prices_path=prices_path,
+        labor_rate=labor_rate,
+        facet_count=inputs.facet_count,
+        tax_rate=tax_rate,
+        is_residential_property=is_residential_property,
+        complexity_alpha=complexity_alpha,
+    )
+
+
+def estimate_from_roof_squares(
+    roof_type: str,
+    roof_area_squares: float,
+    pricing_mode: str,
+    price_level: str = "low",
+    waste_factor: float = 0.1,
+    margin: float = FIXED_MARGIN,
+    prices_path: str | Path = PRICING_WORKBOOK,
+    labor_rate: float = 0,
+    facet_count: int = 1,
+    tax_rate: float = 0,
+    is_residential_property: bool = True,
+    complexity_alpha: float = 0.02,
+) -> EstimateResult:
+    """Estimate using roof area in squares, primarily for RoofScope payloads."""
+    _validate_positive(roof_area_squares, "roof_area_squares")
+    components = _component_lookup(load_component_prices(prices_path), roof_type)
+    component_list = [
+        component for component in components.values() if not is_labor_component(component)
+    ]
+    labor_component = next(
+        (component for component in components.values() if is_labor_component(component)),
+        None,
+    )
+    quantities = calculate_quantities_from_roof_squares(
+        component_list,
+        roof_area_squares,
+        waste_factor,
+        facet_count=facet_count,
+    )
+    material_cost, lines = calculate_material_cost(
+        component_list,
+        quantities,
+        pricing_mode,
+        price_level,
+    )
+    complexity = complexity_multiplier(facet_count, complexity_alpha)
+    effective_labor_rate = labor_rate
+    if effective_labor_rate == 0 and labor_component is not None:
+        effective_labor_rate = select_unit_price(
+            labor_component,
+            pricing_mode,
+            price_level,
+        )
+    labor_cost = effective_labor_rate * roof_area_squares * complexity
+    totals = calculate_final_price(
+        material_cost,
+        labor_cost,
+        tax_rate,
+        margin,
+        is_residential_property,
+    )
+    roof_area_sqft = roof_area_squares * 100
+    calculation_log = _build_calculation_log(
+        roof_type=roof_type,
+        pricing_mode=pricing_mode,
+        price_level=None if pricing_mode == "insurance" else price_level,
+        plan_area_sqft=None,
+        pitch=0,
+        slope_factor=None,
+        roof_area_sqft=None,
+        waste_factor=waste_factor,
+        line_items=lines,
+        material_cost=totals["material_cost"],
+        labor_rate=None,
+        labor_cost=totals["labor_cost"],
+        complexity=complexity,
+        tax_rate_requested=tax_rate,
+        tax_rate_applied=totals["tax_rate"],
+        tax_amount=totals["tax_amount"],
+        is_residential_property=totals["is_residential_property"],
+        base_cost=totals["base_cost"],
+        final_price=totals["final_price"],
+        quantity_mode="roof_area",
+    )
+    calculation_log.insert(4, f"Roof area = {roof_area_squares:.4f} squares")
+    calculation_log.insert(5, f"Labor rate = ${effective_labor_rate:.2f}/square")
+    return EstimateResult(
+        roof_type=roof_type,
+        pricing_mode=pricing_mode,
+        price_level=None if pricing_mode == "insurance" else price_level,
+        plan_area_sqft=roof_area_squares,
+        roof_area_sqft=roof_area_sqft,
+        slope_factor=1,
+        material_cost=totals["material_cost"],
+        labor_cost=totals["labor_cost"],
+        base_cost=totals["base_cost"],
+        tax_amount=totals["tax_amount"],
+        tax_rate=totals["tax_rate"],
+        is_residential_property=totals["is_residential_property"],
+        complexity_multiplier=complexity,
+        final_price=totals["final_price"],
+        line_items=lines,
+        calculation_log=calculation_log,
+    )
+
+
+def estimate_retail_range_from_roof_squares(
+    roof_type: str,
+    roof_area_squares: float,
+    waste_factor: float = 0.1,
+    margin: float = FIXED_MARGIN,
+    prices_path: str | Path = PRICING_WORKBOOK,
+    labor_rate: float = 0,
+    facet_count: int = 1,
+    tax_rate: float = 0,
+    is_residential_property: bool = True,
+    complexity_alpha: float = 0.02,
+) -> EstimateRangeResult:
+    common_args = {
+        "roof_type": roof_type,
+        "roof_area_squares": roof_area_squares,
+        "pricing_mode": "retail",
+        "waste_factor": waste_factor,
+        "margin": margin,
+        "prices_path": prices_path,
+        "labor_rate": labor_rate,
+        "facet_count": facet_count,
+        "tax_rate": tax_rate,
+        "is_residential_property": is_residential_property,
+        "complexity_alpha": complexity_alpha,
+    }
+    lower = estimate_from_roof_squares(price_level="low", **common_args)
+    upper = estimate_from_roof_squares(price_level="high", **common_args)
+    return EstimateRangeResult(lower=lower, upper=upper)
+
+
+def roof_model_inputs_from_roofscope(payload: dict[str, Any]) -> RoofModelInputs:
+    """Convert RoofScope calculated roof area into existing model inputs.
+
+    RoofScope already provides calculated roof area. To avoid recalculating it
+    from pitch, the adapter passes that area through with a zero pitch.
+    Other RoofScope linear measurements are intentionally ignored.
+    """
+    roof_area_squares = _roofscope_total_roof_area_squares(payload)
+    _validate_positive(roof_area_squares, "RoofScope roof area")
+    return RoofModelInputs(
+        roof_area_squares=roof_area_squares,
+        facet_count=max(1, int(_parse_number(payload.get("Planes"), 1))),
+    )
+
+
+def _roofscope_total_roof_area_squares(payload: dict[str, Any]) -> float:
+    total_roof_area = _parse_number(payload.get("TotalRoofArea"))
+    if total_roof_area > 0:
+        return total_roof_area
+    return sum(_parse_number(area.get("Area")) for area in _roofscope_areas(payload)) / 100
+
+
+def _roofscope_areas(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    buildings = payload.get("Buildings")
+    if not isinstance(buildings, list) or not buildings:
+        return []
+    first_building = buildings[0]
+    if not isinstance(first_building, dict):
+        return []
+    areas = first_building.get("Areas")
+    if not isinstance(areas, list):
+        return []
+    return [area for area in areas if isinstance(area, dict)]
+
+
+def _parse_number(value: Any, default: float = 0) -> float:
+    if value is None or value == "":
+        return default
+    try:
+        return float(str(value).replace(",", "").strip())
+    except ValueError:
+        return default
 
 
 def load_component_prices(

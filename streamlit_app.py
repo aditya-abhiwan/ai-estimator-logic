@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import io
 import json
+import importlib.util
+import sys
 
 import streamlit as st
-from fpdf import FPDF
 
 import roof_pricing as pricing
 
@@ -90,6 +91,37 @@ def component_rows(components: list[pricing.ComponentPrice]) -> list[dict[str, s
     return rows
 
 
+def sample_roofscope_payload() -> str:
+    return json.dumps(
+        {
+            "TotalRoofArea": "33.28",
+            "Planes": 9,
+            "Buildings": [
+                {
+                    "Name": "Structure 1",
+                    "Structure": 1,
+                    "Areas": [
+                        {"Name": "A", "Area": 751, "Pitch": "6:12", "IWB": "321"},
+                        {"Name": "B", "Area": 163, "Pitch": "6:12", "IWB": "60"},
+                        {"Name": "I", "Area": 276, "Pitch": "1:12", "IWB": "0"},
+                    ],
+                }
+            ],
+        },
+        indent=2,
+    )
+
+
+def pdf_support_available() -> bool:
+    if importlib.util.find_spec("fpdf") is None:
+        return False
+    try:
+        from fpdf import FPDF  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def main() -> None:
     st.title("FPR Roof Pricing Estimator")
     st.caption(
@@ -121,15 +153,32 @@ def main() -> None:
             options=["retail", "insurance"],
             default="retail",
         )
-
-        st.header("Roof Geometry")
-        plan_area = st.number_input(
-            "Plan area / horizontal roof area (sq ft)",
-            min_value=1.0,
-            value=2000.0,
-            step=50.0,
+        input_mode = st.segmented_control(
+            "Input mode",
+            options=["manual", "roofscope"],
+            default="manual",
         )
-        pitch = st.text_input("Pitch", value="6:12")
+
+        roofscope_payload_text = ""
+        plan_area = 2000.0
+        pitch = "6:12"
+        facet_count = 1
+        if input_mode == "manual":
+            st.header("Roof Geometry")
+            plan_area = st.number_input(
+                "Plan area / horizontal roof area (sq ft)",
+                min_value=1.0,
+                value=2000.0,
+                step=50.0,
+            )
+            pitch = st.text_input("Pitch", value="6:12")
+        else:
+            st.header("RoofScope")
+            roofscope_payload_text = st.text_area(
+                "RoofScope JSON",
+                value=sample_roofscope_payload(),
+                height=260,
+            )
         waste_factor_percent = st.number_input(
             "Waste factor (%)",
             min_value=0.0,
@@ -138,12 +187,13 @@ def main() -> None:
         )
 
         st.header("Labor And Taxes")
-        facet_count = st.number_input(
-            "Facet count",
-            min_value=1,
-            value=1,
-            step=1,
-        )
+        if input_mode == "manual":
+            facet_count = st.number_input(
+                "Facet count",
+                min_value=1,
+                value=1,
+                step=1,
+            )
         complexity_alpha_percent = st.number_input(
             "Complexity increase per extra facet (%)",
             min_value=0.0,
@@ -168,24 +218,54 @@ def main() -> None:
 
     if calculate:
         try:
-            estimate_args = {
+            common_args = {
                 "roof_type": roof_type,
-                "plan_area_sqft": plan_area,
-                "pitch": pitch,
                 "waste_factor": waste_factor_percent / 100,
-                "facet_count": int(facet_count),
                 "tax_rate": tax_percent / 100,
                 "is_residential_property": property_type == "residential",
                 "complexity_alpha": complexity_alpha_percent / 100,
             }
             if pricing_mode == "retail":
-                st.session_state["result"] = pricing.estimate_retail_range_from_roof_area(**estimate_args)
+                if input_mode == "roofscope":
+                    payload = json.loads(roofscope_payload_text)
+                    st.session_state["result"] = (
+                        pricing.estimate_retail_range_from_roofscope_model_inputs(
+                            payload,
+                            **common_args,
+                        )
+                    )
+                    st.session_state["input_summary"] = pricing.roof_model_inputs_from_roofscope(payload)
+                else:
+                    st.session_state["result"] = pricing.estimate_retail_range_from_roof_area(
+                        plan_area_sqft=plan_area,
+                        pitch=pitch,
+                        facet_count=int(facet_count),
+                        **common_args,
+                    )
+                    st.session_state["input_summary"] = None
             else:
-                st.session_state["result"] = pricing.estimate_from_roof_area(
-                    pricing_mode="insurance",
-                    price_level="high",
-                    **estimate_args,
-                )
+                if input_mode == "roofscope":
+                    payload = json.loads(roofscope_payload_text)
+                    st.session_state["result"] = (
+                        pricing.estimate_from_roofscope_model_inputs(
+                            payload,
+                            pricing_mode="insurance",
+                            price_level="high",
+                            **common_args,
+                        )
+                    )
+                    st.session_state["input_summary"] = pricing.roof_model_inputs_from_roofscope(payload)
+                else:
+                    st.session_state["result"] = pricing.estimate_from_roof_area(
+                        pricing_mode="insurance",
+                        price_level="high",
+                        plan_area_sqft=plan_area,
+                        pitch=pitch,
+                        facet_count=int(facet_count),
+                        **common_args,
+                    )
+                    st.session_state["input_summary"] = None
+            st.session_state["input_mode"] = input_mode
         except Exception as exc:
             st.error(str(exc))
             return
@@ -227,20 +307,38 @@ def main() -> None:
     detail_metrics[2].metric("Complexity", f"{detail_source.complexity_multiplier:.4f}")
     detail_metrics[3].metric("Tax Amount", money(detail_source.tax_amount))
 
+    input_summary = st.session_state.get("input_summary")
+    if input_summary is not None:
+        roofscope_metrics = st.columns(2)
+        roofscope_metrics[0].metric("RoofScope Area", f"{input_summary.roof_area_squares:,.2f} squares")
+        roofscope_metrics[1].metric("Planes", str(input_summary.facet_count))
+
     effective_tax_rate = detail_source.tax_rate
-    st.download_button(
+    report_plan_area = detail_source.roof_area_sqft or plan_area
+    report_pitch = pitch
+    report_facet_count = int(facet_count)
+    if input_summary is not None:
+        report_pitch = "RoofScope calculated area"
+        report_facet_count = input_summary.facet_count
+    if pdf_support_available():
+        st.download_button(
         label="⬇ Download Report (PDF)",
         data=generate_pdf_report(
             result, detail_source, effective_tax_rate,
-            plan_area=plan_area, pitch=pitch,
-            facet_count=int(facet_count),
+            plan_area=report_plan_area, pitch=report_pitch,
+            facet_count=report_facet_count,
             waste_factor_percent=waste_factor_percent,
             roof_type=roof_type,
         ),
-        file_name=f"roof_estimate_{roof_type.replace(' ', '_')}_{int(plan_area)}sqft.pdf",
+        file_name=f"roof_estimate_{roof_type.replace(' ', '_')}_{int(report_plan_area)}sqft.pdf",
         mime="application/pdf",
-        use_container_width=True,
-    )
+            use_container_width=True,
+        )
+    else:
+        st.warning(
+            "PDF export is unavailable because fpdf2 is not installed in the "
+            f"Python environment running Streamlit: {sys.executable}"
+        )
 
     st.subheader("Line Items")
     if isinstance(result, pricing.EstimateRangeResult):
@@ -352,6 +450,8 @@ def generate_pdf_report(
     waste_factor_percent: float = 0,
     roof_type: str = "",
 ) -> bytes:
+    from fpdf import FPDF
+
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
